@@ -64,6 +64,16 @@ export const AVAILABLE_TOOLS: ToolInfo[] = [
     id: "get-console-messages-in-tab",
     name: "Get Console Messages in Tab",
     description: "Allows the MCP server to read console.log/info/warn/error/debug output from web pages"
+  },
+  {
+    id: "scroll-to-element-in-tab",
+    name: "Scroll to Element in Tab",
+    description: "Allows the MCP server to scroll a web page to bring a CSS selector's element into view"
+  },
+  {
+    id: "capture-screenshot-in-tab",
+    name: "Capture Screenshot in Tab",
+    description: "Allows the MCP server to take screenshots of web pages, optionally cropped to an element"
   }
 ];
 
@@ -80,7 +90,10 @@ export const COMMAND_TO_TOOL_ID: Record<ServerMessageRequest["cmd"], string> = {
   "evaluate-script": "evaluate-script-in-tab",
   "query-dom": "query-dom-in-tab",
   "get-console-messages": "get-console-messages-in-tab",
+  "scroll-to-element": "scroll-to-element-in-tab",
+  "capture-screenshot": "capture-screenshot-in-tab",
 };
+
 
 // Storage schema for tool settings
 export interface ToolSettings {

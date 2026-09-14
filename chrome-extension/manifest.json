@@ -10,7 +10,7 @@
     "ws://127.0.0.1/*",
     "ws://localhost/*"
   ],
-  "optional_host_permissions": ["*://*/*"],
+  "optional_host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "dist/background.js"
   },

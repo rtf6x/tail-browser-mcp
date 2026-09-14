@@ -348,6 +348,35 @@ export class BrowserAPI {
     );
   }
 
+  async scrollToElement(
+    browserId: string,
+    tabId: number,
+    selector: string,
+    block?: "start" | "center" | "end" | "nearest"
+  ) {
+    return await this.sendAndWaitForResponse(
+      browserId,
+      { cmd: "scroll-to-element", tabId, selector, block },
+      "scroll-to-element-result",
+      SCRIPT_RESPONSE_TIMEOUT_MS
+    );
+  }
+
+  async captureScreenshot(
+    browserId: string,
+    tabId: number,
+    selector?: string,
+    format?: "png" | "jpeg",
+    quality?: number
+  ) {
+    return await this.sendAndWaitForResponse(
+      browserId,
+      { cmd: "capture-screenshot", tabId, selector, format, quality },
+      "screenshot-result",
+      SCRIPT_RESPONSE_TIMEOUT_MS
+    );
+  }
+
   private listConnectedBrowserIds(): string[] {
     return this.listConnectedBrowsers()
       .filter((b) => b.connected)

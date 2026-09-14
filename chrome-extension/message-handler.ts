@@ -12,15 +12,53 @@ import {
   buildFindHighlightScript,
   buildGetConsoleMessagesScript,
   buildQueryDomScript,
+  buildScrollToElementScript,
   buildTabContentScript,
+  ensureTabPageAccess,
   executeInTab,
   installConsoleCapture,
   type DomQueryMode,
+  type ScrollBlockPosition,
 } from "./tab-page-access";
 
 const MAX_CONTENT_LENGTH = 50_000;
 
 type TabGroupColor = chrome.tabGroups.Color;
+
+async function cropDataUrl(
+  dataUrl: string,
+  rect: { x: number; y: number; width: number; height: number },
+  devicePixelRatio: number,
+  mimeType: string,
+  quality?: number
+): Promise<{ dataUrl: string; width: number; height: number }> {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const bitmap = await createImageBitmap(blob);
+
+  const sx = Math.max(0, Math.round(rect.x * devicePixelRatio));
+  const sy = Math.max(0, Math.round(rect.y * devicePixelRatio));
+  const sw = Math.max(1, Math.min(bitmap.width - sx, Math.round(rect.width * devicePixelRatio)));
+  const sh = Math.max(1, Math.min(bitmap.height - sy, Math.round(rect.height * devicePixelRatio)));
+
+  const canvas = new OffscreenCanvas(sw, sh);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  const croppedBlob = await canvas.convertToBlob({
+    type: mimeType,
+    quality: quality !== undefined ? quality / 100 : undefined,
+  });
+  const { promise, resolve, reject } = Promise.withResolvers<string>();
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result as string);
+  reader.onerror = () => reject(reader.error);
+  reader.readAsDataURL(croppedBlob);
+  const croppedDataUrl = await promise;
+
+  return { dataUrl: croppedDataUrl, width: sw, height: sh };
+}
+
 
 export class MessageHandler {
   private client: ServerTransport;
@@ -99,6 +137,23 @@ export class MessageHandler {
           req.clear,
           req.level,
           req.limit
+        );
+        break;
+      case "scroll-to-element":
+        await this.scrollToElement(
+          req.correlationId,
+          req.tabId,
+          req.selector,
+          req.block
+        );
+        break;
+      case "capture-screenshot":
+        await this.captureScreenshot(
+          req.correlationId,
+          req.tabId,
+          req.selector,
+          req.format,
+          req.quality
         );
         break;
       default: {
@@ -359,6 +414,92 @@ export class MessageHandler {
       tabId,
       entries: result.entries,
       totalBuffered: result.totalBuffered,
+    });
+  }
+
+  private async scrollToElement(
+    correlationId: string,
+    tabId: number,
+    selector: string,
+    block?: ScrollBlockPosition
+  ): Promise<void> {
+    await ensureTabPageAccess(tabId);
+    const result = await executeInTab<{
+      found: boolean;
+      rect?: { x: number; y: number; width: number; height: number };
+    }>(tabId, buildScrollToElementScript(selector, block ?? "center"));
+
+    await this.client.sendResourceToServer({
+      resource: "scroll-to-element-result",
+      correlationId,
+      tabId,
+      found: result.found,
+      rect: result.rect,
+    });
+  }
+
+  private async captureScreenshot(
+    correlationId: string,
+    tabId: number,
+    selector?: string,
+    format?: "png" | "jpeg",
+    quality?: number
+  ): Promise<void> {
+    const tab = await ensureTabPageAccess(tabId);
+    await browser.tabs.update(tabId, { active: true });
+
+    const mimeType = format === "jpeg" ? "image/jpeg" : "image/png";
+    let elementNotFound = false;
+    let cropRect: { x: number; y: number; width: number; height: number } | undefined;
+    let devicePixelRatio = 1;
+
+    if (selector) {
+      const scrollResult = await executeInTab<{
+        found: boolean;
+        rect?: { x: number; y: number; width: number; height: number };
+        devicePixelRatio?: number;
+      }>(tabId, buildScrollToElementScript(selector, "center"));
+      if (scrollResult.found) {
+        cropRect = scrollResult.rect;
+        devicePixelRatio = scrollResult.devicePixelRatio ?? 1;
+        const { promise: settled, resolve: resolveSettled } = Promise.withResolvers<void>();
+        setTimeout(resolveSettled, 150);
+        await settled;
+      } else {
+        elementNotFound = true;
+      }
+    }
+
+    const rawDataUrl = await browser.tabs.captureVisibleTab(
+      tab.windowId,
+      format === "jpeg"
+        ? { format: "jpeg", quality: quality ?? 90 }
+        : { format: "png" }
+    );
+
+    let finalDataUrl = rawDataUrl;
+    let width: number;
+    let height: number;
+    if (cropRect) {
+      const cropped = await cropDataUrl(rawDataUrl, cropRect, devicePixelRatio, mimeType, quality);
+      finalDataUrl = cropped.dataUrl;
+      width = cropped.width;
+      height = cropped.height;
+    } else {
+      const bitmap = await createImageBitmap(await (await fetch(rawDataUrl)).blob());
+      width = bitmap.width;
+      height = bitmap.height;
+    }
+
+    await this.client.sendResourceToServer({
+      resource: "screenshot-result",
+      correlationId,
+      tabId,
+      dataUrl: finalDataUrl.split(",")[1] ?? "",
+      mimeType,
+      width,
+      height,
+      elementNotFound,
     });
   }
 }

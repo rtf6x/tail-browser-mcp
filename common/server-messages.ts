@@ -72,6 +72,25 @@ export interface GetConsoleMessagesServerMessage extends ServerMessageBase {
   limit?: number;
 }
 
+export type ScrollBlockPosition = "start" | "center" | "end" | "nearest";
+
+export interface ScrollToElementServerMessage extends ServerMessageBase {
+  cmd: "scroll-to-element";
+  tabId: number;
+  selector: string;
+  block?: ScrollBlockPosition;
+}
+
+export type ScreenshotFormat = "png" | "jpeg";
+
+export interface CaptureScreenshotServerMessage extends ServerMessageBase {
+  cmd: "capture-screenshot";
+  tabId: number;
+  selector?: string;
+  format?: ScreenshotFormat;
+  quality?: number;
+}
+
 export type ServerMessage =
   | OpenTabServerMessage
   | CloseTabsServerMessage
@@ -83,6 +102,8 @@ export type ServerMessage =
   | GroupTabsServerMessage
   | EvaluateScriptServerMessage
   | QueryDomServerMessage
-  | GetConsoleMessagesServerMessage;
+  | GetConsoleMessagesServerMessage
+  | ScrollToElementServerMessage
+  | CaptureScreenshotServerMessage;
 
 export type ServerMessageRequest = ServerMessage & { correlationId: string };

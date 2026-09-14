@@ -426,5 +426,96 @@ export function createBrowserControlServer(browserApi: BrowserAPI): McpServer {
     }
   );
 
+  mcpServer.tool(
+    "scroll-to-element-in-tab",
+    "Scroll a browser tab so a CSS selector's first matching element is in view. Useful before capture-screenshot-in-tab to bring an off-screen area into the viewport.",
+    {
+      browserId: browserIdSchema,
+      tabId: z.number(),
+      selector: z.string().describe("CSS selector, e.g. #footer or .card:nth-child(2)"),
+      block: z
+        .enum(["start", "center", "end", "nearest"])
+        .default("center")
+        .describe("Vertical alignment of the element after scrolling"),
+    },
+    async ({ browserId, tabId, selector, block }) => {
+      const id = browserApi.resolveBrowserId(browserId);
+      const result = await browserApi.scrollToElement(id, tabId, selector, block);
+      if (!result.found) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `[${id}] No element matched selector "${selector}"`,
+              isError: true,
+            },
+          ],
+        };
+      }
+      return {
+        content: [
+          {
+            type: "text",
+            text: `[${id}] Scrolled to "${selector}". Viewport rect: x=${result.rect?.x}, y=${result.rect?.y}, width=${result.rect?.width}, height=${result.rect?.height}`,
+          },
+        ],
+      };
+    }
+  );
+
+  mcpServer.tool(
+    "capture-screenshot-in-tab",
+    "Take a screenshot of a browser tab. Without 'selector', captures the visible viewport. With 'selector', scrolls the matching element into view first and crops the screenshot to it — the most reliable way for an agent to inspect a specific area of a page.",
+    {
+      browserId: browserIdSchema,
+      tabId: z.number(),
+      selector: z
+        .string()
+        .optional()
+        .describe("Optional CSS selector to scroll into view and crop the screenshot to"),
+      format: z.enum(["png", "jpeg"]).default("png"),
+      quality: z
+        .number()
+        .min(0)
+        .max(100)
+        .optional()
+        .describe("JPEG quality 0-100 (ignored for png)"),
+    },
+    async ({ browserId, tabId, selector, format, quality }) => {
+      const id = browserApi.resolveBrowserId(browserId);
+      const result = await browserApi.captureScreenshot(
+        id,
+        tabId,
+        selector,
+        format,
+        quality
+      );
+      if (result.elementNotFound) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `[${id}] No element matched selector "${selector}". Captured full viewport instead.`,
+            },
+            {
+              type: "image",
+              data: result.dataUrl,
+              mimeType: result.mimeType,
+            },
+          ],
+        };
+      }
+      return {
+        content: [
+          {
+            type: "image",
+            data: result.dataUrl,
+            mimeType: result.mimeType,
+          },
+        ],
+      };
+    }
+  );
+
   return mcpServer;
 }

@@ -9,11 +9,12 @@ import { browser } from "./browser";
 
 const AUDIT_LOG_SIZE_LIMIT = 100;
 
-const PAGE_TOOLS_DISABLED_BY_DEFAULT = new Set([
-  "evaluate-script-in-tab",
-  "query-dom-in-tab",
-  "get-console-messages-in-tab",
-]);
+const PAGE_TOOLS_DISABLED_BY_DEFAULT: Record<string, true> = {
+  "evaluate-script-in-tab": true,
+  "query-dom-in-tab": true,
+  "get-console-messages-in-tab": true,
+  "capture-screenshot-in-tab": true,
+};
 
 export interface ToolInfo {
   id: string;
@@ -72,6 +73,16 @@ export const AVAILABLE_TOOLS: ToolInfo[] = [
     name: "Get Console Messages in Tab",
     description: "Allows the MCP server to read console output from web pages",
   },
+  {
+    id: "scroll-to-element-in-tab",
+    name: "Scroll to Element in Tab",
+    description: "Allows the MCP server to scroll a web page to bring a CSS selector's element into view",
+  },
+  {
+    id: "capture-screenshot-in-tab",
+    name: "Capture Screenshot in Tab",
+    description: "Allows the MCP server to take screenshots of web pages, optionally cropped to an element",
+  },
 ];
 
 export const COMMAND_TO_TOOL_ID: Record<ServerMessageRequest["cmd"], string> = {
@@ -86,6 +97,8 @@ export const COMMAND_TO_TOOL_ID: Record<ServerMessageRequest["cmd"], string> = {
   "evaluate-script": "evaluate-script-in-tab",
   "query-dom": "query-dom-in-tab",
   "get-console-messages": "get-console-messages-in-tab",
+  "scroll-to-element": "scroll-to-element-in-tab",
+  "capture-screenshot": "capture-screenshot-in-tab",
 };
 
 export interface ToolSettings {
@@ -115,7 +128,7 @@ function generateBrowserId(): string {
 export function getDefaultToolSettings(): ToolSettings {
   const settings: ToolSettings = {};
   AVAILABLE_TOOLS.forEach((tool) => {
-    settings[tool.id] = !PAGE_TOOLS_DISABLED_BY_DEFAULT.has(tool.id);
+    settings[tool.id] = !(tool.id in PAGE_TOOLS_DISABLED_BY_DEFAULT);
   });
   return settings;
 }

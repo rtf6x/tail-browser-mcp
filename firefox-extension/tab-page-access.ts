@@ -184,6 +184,29 @@ export function buildGetConsoleMessagesScript(
 `;
 }
 
+export type ScrollBlockPosition = "start" | "center" | "end" | "nearest";
+
+export function buildScrollToElementScript(
+  selector: string,
+  block: ScrollBlockPosition
+): string {
+  const selectorJson = JSON.stringify(selector);
+  const blockJson = JSON.stringify(block);
+  return `
+(function () {
+  var el = document.querySelector(${selectorJson});
+  if (!el) return { found: false };
+  el.scrollIntoView({ block: ${blockJson}, inline: "nearest" });
+  var rect = el.getBoundingClientRect();
+  return {
+    found: true,
+    rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+    devicePixelRatio: window.devicePixelRatio || 1,
+  };
+})();
+`;
+}
+
 export async function ensureTabPageAccess(tabId: number): Promise<browser.tabs.Tab> {
   const tab = await browser.tabs.get(tabId);
   if (tab.url && (await isDomainInDenyList(tab.url))) {

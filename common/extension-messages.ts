@@ -99,6 +99,23 @@ export interface ConsoleMessagesExtensionMessage extends ExtensionMessageBase {
   totalBuffered: number;
 }
 
+export interface ScrollToElementExtensionMessage extends ExtensionMessageBase {
+  resource: "scroll-to-element-result";
+  tabId: number;
+  found: boolean;
+  rect?: { x: number; y: number; width: number; height: number };
+}
+
+export interface CaptureScreenshotExtensionMessage extends ExtensionMessageBase {
+  resource: "screenshot-result";
+  tabId: number;
+  dataUrl: string;
+  mimeType: string;
+  width: number;
+  height: number;
+  elementNotFound?: boolean;
+}
+
 export type ExtensionMessage =
   | TabContentExtensionMessage
   | TabsExtensionMessage
@@ -110,7 +127,9 @@ export type ExtensionMessage =
   | TabGroupCreatedExtensionMessage
   | EvaluateScriptExtensionMessage
   | QueryDomExtensionMessage
-  | ConsoleMessagesExtensionMessage;
+  | ConsoleMessagesExtensionMessage
+  | ScrollToElementExtensionMessage
+  | CaptureScreenshotExtensionMessage;
 
 export interface ExtensionError {
   correlationId: string;

@@ -51,7 +51,7 @@ const allSitesStatusElement = document.getElementById(
   "all-sites-status"
 ) as HTMLDivElement;
 
-const ALL_SITES_ORIGIN = "*://*/*";
+const ALL_SITES_ORIGIN = "<all_urls>";
 
 function showAllSitesStatus(message: string, isError = false): void {
   allSitesStatusElement.textContent = message;
