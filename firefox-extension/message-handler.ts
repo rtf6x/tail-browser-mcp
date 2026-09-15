@@ -4,6 +4,7 @@ import { isCommandAllowed, isDomainInDenyList, COMMAND_TO_TOOL_ID, addAuditLogEn
 import {
   buildEvaluateScript,
   buildGetConsoleMessagesScript,
+  buildMeasureViewportScript,
   buildQueryDomScript,
   buildScrollToElementScript,
   ensureTabPageAccess,
@@ -46,6 +47,8 @@ async function cropDataUrl(
 
   return { dataUrl: croppedDataUrl, width: sw, height: sh };
 }
+
+const originalWindowSizes = new Map<number, { width: number; height: number }>();
 
 export class MessageHandler {
   private client: WebsocketClient;
@@ -141,6 +144,17 @@ export class MessageHandler {
           req.selector,
           req.format,
           req.quality
+        );
+        break;
+      case "set-viewport-size":
+        await this.setViewportSize(
+          req.correlationId,
+          req.tabId,
+          req.width,
+          req.height,
+          req.deviceScaleFactor,
+          req.mobile,
+          req.reset
         );
         break;
       default:
@@ -563,6 +577,92 @@ export class MessageHandler {
       width,
       height,
       elementNotFound,
+    });
+  }
+
+  private async setViewportSize(
+    correlationId: string,
+    tabId: number,
+    width?: number,
+    height?: number,
+    _deviceScaleFactor?: number,
+    _mobile?: boolean,
+    reset?: boolean
+  ): Promise<void> {
+    const tab = await ensureTabPageAccess(tabId);
+    const windowId = tab.windowId;
+    if (windowId === undefined) {
+      throw new Error("Tab has no containing window — cannot resize its viewport");
+    }
+
+    if (reset || width === undefined || height === undefined) {
+      const original = originalWindowSizes.get(windowId);
+      if (original) {
+        await browser.windows.update(windowId, {
+          width: original.width,
+          height: original.height,
+        });
+        originalWindowSizes.delete(windowId);
+      }
+      const measured = await executeInTab<{
+        innerWidth: number;
+        innerHeight: number;
+        devicePixelRatio: number;
+      }>(tabId, buildMeasureViewportScript());
+      await this.client.sendResourceToServer({
+        resource: "viewport-size-result",
+        correlationId,
+        tabId,
+        width: measured.innerWidth,
+        height: measured.innerHeight,
+        deviceScaleFactor: measured.devicePixelRatio,
+        mobile: false,
+        method: "window-resize",
+      });
+      return;
+    }
+
+    const before = await executeInTab<{
+      innerWidth: number;
+      innerHeight: number;
+      outerWidth: number;
+      outerHeight: number;
+    }>(tabId, buildMeasureViewportScript());
+
+    if (!originalWindowSizes.has(windowId)) {
+      const win = await browser.windows.get(windowId);
+      originalWindowSizes.set(windowId, {
+        width: win.width ?? before.outerWidth,
+        height: win.height ?? before.outerHeight,
+      });
+    }
+
+    const widthDelta = before.outerWidth - before.innerWidth;
+    const heightDelta = before.outerHeight - before.innerHeight;
+    await browser.windows.update(windowId, {
+      width: Math.round(width + widthDelta),
+      height: Math.round(height + heightDelta),
+    });
+
+    const { promise: settled, resolve: resolveSettled } = Promise.withResolvers<void>();
+    setTimeout(resolveSettled, 150);
+    await settled;
+
+    const after = await executeInTab<{
+      innerWidth: number;
+      innerHeight: number;
+      devicePixelRatio: number;
+    }>(tabId, buildMeasureViewportScript());
+
+    await this.client.sendResourceToServer({
+      resource: "viewport-size-result",
+      correlationId,
+      tabId,
+      width: after.innerWidth,
+      height: after.innerHeight,
+      deviceScaleFactor: after.devicePixelRatio,
+      mobile: false,
+      method: "window-resize",
     });
   }
 }

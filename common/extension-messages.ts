@@ -116,6 +116,16 @@ export interface CaptureScreenshotExtensionMessage extends ExtensionMessageBase 
   elementNotFound?: boolean;
 }
 
+export interface SetViewportSizeExtensionMessage extends ExtensionMessageBase {
+  resource: "viewport-size-result";
+  tabId: number;
+  width: number;
+  height: number;
+  deviceScaleFactor: number;
+  mobile: boolean;
+  method: "cdp" | "window-resize";
+}
+
 export type ExtensionMessage =
   | TabContentExtensionMessage
   | TabsExtensionMessage
@@ -129,7 +139,8 @@ export type ExtensionMessage =
   | QueryDomExtensionMessage
   | ConsoleMessagesExtensionMessage
   | ScrollToElementExtensionMessage
-  | CaptureScreenshotExtensionMessage;
+  | CaptureScreenshotExtensionMessage
+  | SetViewportSizeExtensionMessage;
 
 export interface ExtensionError {
   correlationId: string;

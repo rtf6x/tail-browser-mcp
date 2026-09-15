@@ -1,4 +1,8 @@
-import type { QueryDomExtensionMessage, ServerMessageRequest } from "@browser-control-mcp/common";
+import type {
+  QueryDomExtensionMessage,
+  ServerMessageRequest,
+  SetViewportSizeExtensionMessage,
+} from "@browser-control-mcp/common";
 import { browser } from "./browser";
 import type { ServerTransport } from "./server-transport";
 import {
@@ -11,6 +15,7 @@ import {
   buildEvaluateScript,
   buildFindHighlightScript,
   buildGetConsoleMessagesScript,
+  buildGetViewportDimsScript,
   buildQueryDomScript,
   buildScrollToElementScript,
   buildTabContentScript,
@@ -59,6 +64,11 @@ async function cropDataUrl(
   return { dataUrl: croppedDataUrl, width: sw, height: sh };
 }
 
+const debuggerAttachedTabs = new Set<number>();
+
+browser.tabs.onRemoved.addListener((tabId: number) => {
+  debuggerAttachedTabs.delete(tabId);
+});
 
 export class MessageHandler {
   private client: ServerTransport;
@@ -154,6 +164,17 @@ export class MessageHandler {
           req.selector,
           req.format,
           req.quality
+        );
+        break;
+      case "set-viewport-size":
+        await this.setViewportSize(
+          req.correlationId,
+          req.tabId,
+          req.width,
+          req.height,
+          req.deviceScaleFactor,
+          req.mobile,
+          req.reset
         );
         break;
       default: {
@@ -470,12 +491,25 @@ export class MessageHandler {
       }
     }
 
-    const rawDataUrl = await browser.tabs.captureVisibleTab(
-      tab.windowId,
-      format === "jpeg"
-        ? { format: "jpeg", quality: quality ?? 90 }
-        : { format: "png" }
-    );
+    let rawDataUrl: string;
+    if (debuggerAttachedTabs.has(tabId)) {
+      const captureResult = (await chrome.debugger.sendCommand(
+        { tabId },
+        "Page.captureScreenshot",
+        {
+          format: format === "jpeg" ? "jpeg" : "png",
+          quality: format === "jpeg" ? quality ?? 90 : undefined,
+        }
+      )) as { data: string };
+      rawDataUrl = `data:${mimeType};base64,${captureResult.data}`;
+    } else {
+      rawDataUrl = await browser.tabs.captureVisibleTab(
+        tab.windowId,
+        format === "jpeg"
+          ? { format: "jpeg", quality: quality ?? 90 }
+          : { format: "png" }
+      );
+    }
 
     let finalDataUrl = rawDataUrl;
     let width: number;
@@ -500,6 +534,76 @@ export class MessageHandler {
       width,
       height,
       elementNotFound,
+    });
+  }
+
+  private async setViewportSize(
+    correlationId: string,
+    tabId: number,
+    width?: number,
+    height?: number,
+    deviceScaleFactor?: number,
+    mobile?: boolean,
+    reset?: boolean
+  ): Promise<void> {
+    await ensureTabPageAccess(tabId);
+
+    if (reset || width === undefined || height === undefined) {
+      if (debuggerAttachedTabs.has(tabId)) {
+        await chrome.debugger.sendCommand(
+          { tabId },
+          "Emulation.clearDeviceMetricsOverride"
+        );
+        await chrome.debugger.detach({ tabId });
+        debuggerAttachedTabs.delete(tabId);
+      }
+      const dims = await executeInTab<{
+        width: number;
+        height: number;
+        devicePixelRatio: number;
+      }>(tabId, buildGetViewportDimsScript());
+      await this.client.sendResourceToServer({
+        resource: "viewport-size-result",
+        correlationId,
+        tabId,
+        width: dims.width,
+        height: dims.height,
+        deviceScaleFactor: dims.devicePixelRatio,
+        mobile: false,
+        method: "cdp",
+      });
+      return;
+    }
+
+    if (!debuggerAttachedTabs.has(tabId)) {
+      await chrome.debugger.attach({ tabId }, "1.3");
+      debuggerAttachedTabs.add(tabId);
+    }
+
+    const appliedDeviceScaleFactor = deviceScaleFactor ?? 1;
+    const isMobile = mobile ?? false;
+    await chrome.debugger.sendCommand(
+      { tabId },
+      "Emulation.setDeviceMetricsOverride",
+      {
+        width,
+        height,
+        deviceScaleFactor: appliedDeviceScaleFactor,
+        mobile: isMobile,
+        screenWidth: width,
+        screenHeight: height,
+      }
+    );
+
+    await this.client.sendResourceToServer({
+      resource: "viewport-size-result",
+      correlationId,
+      tabId,
+      width,
+      height,
+      deviceScaleFactor: appliedDeviceScaleFactor,
+      mobile: isMobile,
+      method: "cdp",
     });
   }
 }

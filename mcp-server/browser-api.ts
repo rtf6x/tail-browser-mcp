@@ -377,6 +377,31 @@ export class BrowserAPI {
     );
   }
 
+  async setViewportSize(
+    browserId: string,
+    tabId: number,
+    width?: number,
+    height?: number,
+    deviceScaleFactor?: number,
+    mobile?: boolean,
+    reset?: boolean
+  ) {
+    return await this.sendAndWaitForResponse(
+      browserId,
+      {
+        cmd: "set-viewport-size",
+        tabId,
+        width,
+        height,
+        deviceScaleFactor,
+        mobile,
+        reset,
+      },
+      "viewport-size-result",
+      SCRIPT_RESPONSE_TIMEOUT_MS
+    );
+  }
+
   private listConnectedBrowserIds(): string[] {
     return this.listConnectedBrowsers()
       .filter((b) => b.connected)

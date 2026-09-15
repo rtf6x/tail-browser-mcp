@@ -14,6 +14,7 @@ const PAGE_TOOLS_DISABLED_BY_DEFAULT: Record<string, true> = {
   "query-dom-in-tab": true,
   "get-console-messages-in-tab": true,
   "capture-screenshot-in-tab": true,
+  "set-viewport-size-in-tab": true,
 };
 
 export interface ToolInfo {
@@ -83,6 +84,11 @@ export const AVAILABLE_TOOLS: ToolInfo[] = [
     name: "Capture Screenshot in Tab",
     description: "Allows the MCP server to take screenshots of web pages, optionally cropped to an element",
   },
+  {
+    id: "set-viewport-size-in-tab",
+    name: "Set Viewport Size in Tab",
+    description: "Allows the MCP server to resize a tab's viewport to test responsive/mobile layouts (requires the 'debugger' permission)",
+  },
 ];
 
 export const COMMAND_TO_TOOL_ID: Record<ServerMessageRequest["cmd"], string> = {
@@ -99,6 +105,7 @@ export const COMMAND_TO_TOOL_ID: Record<ServerMessageRequest["cmd"], string> = {
   "get-console-messages": "get-console-messages-in-tab",
   "scroll-to-element": "scroll-to-element-in-tab",
   "capture-screenshot": "capture-screenshot-in-tab",
+  "set-viewport-size": "set-viewport-size-in-tab",
 };
 
 export interface ToolSettings {

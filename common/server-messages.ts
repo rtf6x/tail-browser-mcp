@@ -91,6 +91,16 @@ export interface CaptureScreenshotServerMessage extends ServerMessageBase {
   quality?: number;
 }
 
+export interface SetViewportSizeServerMessage extends ServerMessageBase {
+  cmd: "set-viewport-size";
+  tabId: number;
+  width?: number;
+  height?: number;
+  deviceScaleFactor?: number;
+  mobile?: boolean;
+  reset?: boolean;
+}
+
 export type ServerMessage =
   | OpenTabServerMessage
   | CloseTabsServerMessage
@@ -104,6 +114,7 @@ export type ServerMessage =
   | QueryDomServerMessage
   | GetConsoleMessagesServerMessage
   | ScrollToElementServerMessage
-  | CaptureScreenshotServerMessage;
+  | CaptureScreenshotServerMessage
+  | SetViewportSizeServerMessage;
 
 export type ServerMessageRequest = ServerMessage & { correlationId: string };

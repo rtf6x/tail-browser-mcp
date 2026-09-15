@@ -3,7 +3,7 @@
   "name": "Browser Control MCP (Chrome)",
   "version": "1.6.1",
   "description": "Local MCP server control for Chrome. Open extension options after install for setup steps.",
-  "permissions": ["tabs", "tabGroups", "history", "storage", "scripting", "alarms", "offscreen"],
+  "permissions": ["tabs", "tabGroups", "history", "storage", "scripting", "alarms", "offscreen", "debugger"],
   "host_permissions": [
     "http://127.0.0.1/*",
     "http://localhost/*",

@@ -74,6 +74,11 @@ export const AVAILABLE_TOOLS: ToolInfo[] = [
     id: "capture-screenshot-in-tab",
     name: "Capture Screenshot in Tab",
     description: "Allows the MCP server to take screenshots of web pages, optionally cropped to an element"
+  },
+  {
+    id: "set-viewport-size-in-tab",
+    name: "Set Viewport Size in Tab",
+    description: "Allows the MCP server to resize a tab's browser window to approximate a given viewport size, for testing responsive layouts"
   }
 ];
 
@@ -92,6 +97,7 @@ export const COMMAND_TO_TOOL_ID: Record<ServerMessageRequest["cmd"], string> = {
   "get-console-messages": "get-console-messages-in-tab",
   "scroll-to-element": "scroll-to-element-in-tab",
   "capture-screenshot": "capture-screenshot-in-tab",
+  "set-viewport-size": "set-viewport-size-in-tab",
 };
 
 

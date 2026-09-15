@@ -268,6 +268,18 @@ export function buildScrollToElementScript(
 `;
 }
 
+export function buildGetViewportDimsScript(): string {
+  return `
+(function () {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio || 1,
+  };
+})();
+`;
+}
+
 async function checkForUrlPermission(url: string | undefined): Promise<void> {
   if (!url) {
     throw new Error("Tab has no URL — cannot access page content");

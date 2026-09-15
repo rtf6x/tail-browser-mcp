@@ -117,6 +117,7 @@ async function handleAllSitesAccessToggle(event: Event): Promise<void> {
   }
 }
 
+
 /**
  * Creates the tool settings UI
  */

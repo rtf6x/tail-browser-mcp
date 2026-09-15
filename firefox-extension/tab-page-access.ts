@@ -207,6 +207,20 @@ export function buildScrollToElementScript(
 `;
 }
 
+export function buildMeasureViewportScript(): string {
+  return `
+(function () {
+  return {
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    outerWidth: window.outerWidth,
+    outerHeight: window.outerHeight,
+    devicePixelRatio: window.devicePixelRatio || 1,
+  };
+})();
+`;
+}
+
 export async function ensureTabPageAccess(tabId: number): Promise<browser.tabs.Tab> {
   const tab = await browser.tabs.get(tabId);
   if (tab.url && (await isDomainInDenyList(tab.url))) {

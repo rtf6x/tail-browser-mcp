@@ -517,5 +517,48 @@ export function createBrowserControlServer(browserApi: BrowserAPI): McpServer {
     }
   );
 
+  mcpServer.tool(
+    "set-viewport-size-in-tab",
+    "Resize the effective viewport of a browser tab to test responsive/mobile layouts. On Chrome this emulates the viewport via DevTools protocol (like the Device Toolbar) without touching the real browser window. On Firefox, which has no such API, it falls back to resizing the containing browser window, which affects other tabs in that window. Returns the size actually applied, which may differ slightly from the request. Call with 'reset: true' to restore normal behavior.",
+    {
+      browserId: browserIdSchema,
+      tabId: z.number(),
+      width: z.number().optional().describe("Viewport width in CSS pixels, e.g. 375 for iPhone"),
+      height: z.number().optional().describe("Viewport height in CSS pixels, e.g. 667 for iPhone"),
+      deviceScaleFactor: z
+        .number()
+        .optional()
+        .describe("Device pixel ratio to emulate (Chrome only), e.g. 2 or 3 for a phone"),
+      mobile: z
+        .boolean()
+        .optional()
+        .describe("Emulate a mobile device (touch, mobile viewport meta handling; Chrome only)"),
+      reset: z
+        .boolean()
+        .optional()
+        .describe("Restore the tab/window to its normal, non-emulated size"),
+    },
+    async ({ browserId, tabId, width, height, deviceScaleFactor, mobile, reset }) => {
+      const id = browserApi.resolveBrowserId(browserId);
+      const result = await browserApi.setViewportSize(
+        id,
+        tabId,
+        width,
+        height,
+        deviceScaleFactor,
+        mobile,
+        reset
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: `[${id}] Viewport now ${result.width}x${result.height} (deviceScaleFactor=${result.deviceScaleFactor}, mobile=${result.mobile}, method=${result.method})`,
+          },
+        ],
+      };
+    }
+  );
+
   return mcpServer;
 }
