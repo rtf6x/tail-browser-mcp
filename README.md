@@ -83,7 +83,7 @@ All tools can be enabled or disabled individually in the extension options page 
 | `query-dom-in-tab` | CSS selector → text, HTML, or list | **consent** |
 | `get-console-messages-in-tab` | Read console output from a tab | **consent** |
 | `scroll-to-element-in-tab` | Scroll a CSS selector's element into view | **consent** |
-| `capture-screenshot-in-tab` | Screenshot a tab, optionally cropped to an element | **consent** |
+| `capture-screenshot-in-tab` | Screenshot a tab, optionally cropped to an element (Firefox: first use prompts for the broad "access data for all websites" permission — Firefox does not expose tab capture on a narrower per-domain grant) | **consent** |
 | `set-viewport-size-in-tab` | Resize a tab's viewport for responsive/mobile testing (Chrome: exact width/height/DPI/mobile emulation via CDP; Firefox: window-resize approximation, `mobile`/`deviceScaleFactor` ignored) | **consent** |
 
 All action tools accept optional **`browserId`**. Omit it when exactly one browser is connected.

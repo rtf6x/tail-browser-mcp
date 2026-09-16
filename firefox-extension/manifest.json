@@ -19,7 +19,7 @@
         "storage"
     ],
     "optional_permissions": [
-        "*://*/*",
+        "<all_urls>",
         "find"
     ],
     "background": {

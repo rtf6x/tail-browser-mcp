@@ -7,6 +7,7 @@ import {
   buildMeasureViewportScript,
   buildQueryDomScript,
   buildScrollToElementScript,
+  ensureCapturePermission,
   ensureTabPageAccess,
   executeInTab,
   installConsoleCapture,
@@ -523,6 +524,7 @@ export class MessageHandler {
     quality?: number
   ): Promise<void> {
     const tab = await ensureTabPageAccess(tabId);
+    await ensureCapturePermission();
     await browser.tabs.update(tabId, { active: true });
 
     const mimeType = format === "jpeg" ? "image/jpeg" : "image/png";

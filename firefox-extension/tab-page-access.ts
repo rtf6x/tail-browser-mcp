@@ -250,6 +250,27 @@ async function checkForUrlPermission(url: string | undefined): Promise<void> {
   }
 }
 
+export const CAPTURE_PERMISSION_ORIGIN = "<all_urls>";
+
+// Firefox only exposes browser.tabs.captureVisibleTab when the extension holds the
+// literal "<all_urls>" keyword permission (or activeTab) — a wildcard match pattern
+// like "*://*/*", or a narrow per-domain host permission granted via the page-access
+// consent flow, is not sufficient. Request/verify "<all_urls>" separately.
+export async function ensureCapturePermission(): Promise<void> {
+  const granted = await browser.permissions.contains({
+    origins: [CAPTURE_PERMISSION_ORIGIN],
+  });
+
+  if (!granted) {
+    const optionsUrl = browser.runtime.getURL("options.html");
+    const urlWithParams = `${optionsUrl}?requestOrigin=${encodeURIComponent(CAPTURE_PERMISSION_ORIGIN)}`;
+    await browser.tabs.create({ url: urlWithParams });
+    throw new Error(
+      'The user has not yet granted the broad "access data for all websites" permission Firefox requires for tab screenshots. A dialog is now being opened to request it. If the user grants permission, you can try the request again.'
+    );
+  }
+}
+
 import { isDomainInDenyList } from "./extension-config";
 
 export async function executeInTab<T>(tabId: number, code: string): Promise<T> {

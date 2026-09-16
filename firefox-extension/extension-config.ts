@@ -73,7 +73,7 @@ export const AVAILABLE_TOOLS: ToolInfo[] = [
   {
     id: "capture-screenshot-in-tab",
     name: "Capture Screenshot in Tab",
-    description: "Allows the MCP server to take screenshots of web pages, optionally cropped to an element"
+    description: "Allows the MCP server to take screenshots of web pages, optionally cropped to an element (requires granting the 'access data for all websites' permission when first used)"
   },
   {
     id: "set-viewport-size-in-tab",

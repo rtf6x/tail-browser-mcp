@@ -21,6 +21,15 @@ import {
   parseWsUrlList,
 } from "@tail-browser-mcp/common/ws-endpoints";
 
+
+interface PermissionModalHandlers {
+  handleGrant: () => void;
+  handleCancel: () => void;
+  grantBtn: HTMLButtonElement;
+  cancelBtn: HTMLButtonElement;
+}
+
+let activePermissionHandlers: PermissionModalHandlers | undefined;
 const toolSettingsContainer = document.getElementById(
   "tool-settings-container"
 ) as HTMLDivElement;
@@ -469,7 +478,64 @@ function showPermissionRequest(url: string) {
   cancelBtn.addEventListener("click", handleCancel);
 
   // Store references to remove listeners later
-  (window as any).permissionHandlers = {
+  activePermissionHandlers = {
+    handleGrant,
+    handleCancel,
+    grantBtn,
+    cancelBtn
+  };
+}
+
+function showOriginPermissionRequest(originPattern: string) {
+  // Show the modal and hide the main content
+  const modal = document.getElementById("permission-modal") as HTMLDivElement;
+  const mainContent = document.getElementById("main-content") as HTMLDivElement;
+  const domainElement = document.getElementById("permission-domain") as HTMLDivElement;
+  const grantBtn = document.getElementById("grant-btn") as HTMLButtonElement;
+  const cancelBtn = document.getElementById("cancel-btn") as HTMLButtonElement;
+  const permissionText = document.getElementById("permission-text") as HTMLParagraphElement;
+
+  // Set the pattern in the modal
+  domainElement.textContent = "All websites";
+
+  // Explain why the broad permission is needed
+  permissionText.textContent = "Firefox requires access to all websites to take tab screenshots (capture-screenshot-in-tab), even for a page you've already approved individually. This will allow that tool to work.";
+
+  // Show modal and blur main content
+  modal.classList.remove("hidden");
+  mainContent.classList.add("modal-open");
+
+  // Handle grant permission button click
+  const handleGrant = async () => {
+    try {
+      const granted = await browser.permissions.request({
+        origins: [originPattern],
+      });
+
+      if (granted) {
+        // Permission granted, close the window or redirect back
+        window.close();
+      } else {
+        // Permission denied, hide modal and show main content
+        hidePermissionModal();
+      }
+    } catch (error) {
+      console.error("Error requesting permission:", error);
+      hidePermissionModal();
+    }
+  };
+
+  // Handle cancel button click
+  const handleCancel = () => {
+    hidePermissionModal();
+  };
+
+  // Add event listeners
+  grantBtn.addEventListener("click", handleGrant);
+  cancelBtn.addEventListener("click", handleCancel);
+
+  // Store references to remove listeners later
+  activePermissionHandlers = {
     handleGrant,
     handleCancel,
     grantBtn,
@@ -526,7 +592,7 @@ function showGlobalPermissionRequest(permissions: string[]) {
   cancelBtn.addEventListener("click", handleCancel);
 
   // Store references to remove listeners later
-  (window as any).permissionHandlers = {
+  activePermissionHandlers = {
     handleGrant,
     handleCancel,
     grantBtn,
@@ -543,11 +609,11 @@ function hidePermissionModal() {
   mainContent.classList.remove("modal-open");
 
   // Clean up event listeners
-  const handlers = (window as any).permissionHandlers;
+  const handlers = activePermissionHandlers;
   if (handlers) {
     handlers.grantBtn.removeEventListener("click", handlers.handleGrant);
     handlers.cancelBtn.removeEventListener("click", handlers.handleCancel);
-    delete (window as any).permissionHandlers;
+    activePermissionHandlers = undefined;
   }
 }
 
@@ -576,11 +642,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const params = new URLSearchParams(window.location.search);
   const requestUrl = params.get("requestUrl");
+  const requestOrigin = params.get("requestOrigin");
   const requestPermissions = params.get("requestPermissions");
 
   if (requestUrl) {
     // Show UI for requesting permission for this specific URL
     showPermissionRequest(requestUrl);
+  } else if (requestOrigin) {
+    // Show UI for requesting the broad host permission tab screenshots need
+    showOriginPermissionRequest(requestOrigin);
   } else if (requestPermissions) {
     // Show UI for requesting global permissions
     try {
