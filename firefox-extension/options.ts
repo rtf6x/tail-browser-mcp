@@ -1,5 +1,5 @@
 /**
- * Options page script for Browser Control MCP extension
+ * Options page script for Tail MCP extension
  */
 import {
   AVAILABLE_TOOLS,
@@ -19,7 +19,7 @@ import {
 import {
   hostPermissionsForWsUrls,
   parseWsUrlList,
-} from "@browser-control-mcp/common/ws-endpoints";
+} from "@tail-browser-mcp/common/ws-endpoints";
 
 const toolSettingsContainer = document.getElementById(
   "tool-settings-container"

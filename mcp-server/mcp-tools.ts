@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { BrowserAPI } from "./browser-api";
-import { BROWSER_ID_PATTERN } from "@browser-control-mcp/common/handshake-messages";
+import { BROWSER_ID_PATTERN } from "@tail-browser-mcp/common/handshake-messages";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 

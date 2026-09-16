@@ -1,10 +1,10 @@
 /**
- * Configuration management for Browser Control MCP (Chrome)
+ * Configuration management for Tail MCP (Chrome)
  */
 
-import { ServerMessageRequest } from "@browser-control-mcp/common/server-messages";
-import { normalizeBrowserId } from "@browser-control-mcp/common/handshake-messages";
-import { DEFAULT_WS_URL } from "@browser-control-mcp/common/ws-endpoints";
+import { ServerMessageRequest } from "@tail-browser-mcp/common/server-messages";
+import { normalizeBrowserId } from "@tail-browser-mcp/common/handshake-messages";
+import { DEFAULT_WS_URL } from "@tail-browser-mcp/common/ws-endpoints";
 import { browser } from "./browser";
 
 const AUDIT_LOG_SIZE_LIMIT = 100;

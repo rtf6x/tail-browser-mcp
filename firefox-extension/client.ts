@@ -1,5 +1,5 @@
 import { getMessageSignature } from "./auth";
-import { WebsocketClient } from "@browser-control-mcp/common/websocket-client";
+import { WebsocketClient } from "@tail-browser-mcp/common/websocket-client";
 
 export { WebsocketClient };
 

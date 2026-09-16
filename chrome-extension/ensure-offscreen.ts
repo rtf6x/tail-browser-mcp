@@ -21,7 +21,7 @@ export async function ensureOffscreenDocument(): Promise<void> {
       url: OFFSCREEN_URL,
       reasons: ["WORKERS"],
       justification:
-        "Maintain a persistent WebSocket connection to the Browser Control MCP server",
+        "Maintain a persistent WebSocket connection to the Tail MCP server",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

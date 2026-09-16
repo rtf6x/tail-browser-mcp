@@ -1,5 +1,5 @@
 import { browser } from "./browser";
-import type { ConnectionStatus } from "@browser-control-mcp/common/websocket-client";
+import type { ConnectionStatus } from "@tail-browser-mcp/common/websocket-client";
 
 const ICONS: Record<ConnectionStatus, string> = {
   connected: "connected",
@@ -8,9 +8,9 @@ const ICONS: Record<ConnectionStatus, string> = {
 };
 
 const TITLES: Record<ConnectionStatus, string> = {
-  connected: "Browser Control MCP — connected to MCP server",
-  connecting: "Browser Control MCP — connecting…",
-  disconnected: "Browser Control MCP — MCP server offline",
+  connected: "Tail MCP — connected to MCP server",
+  connecting: "Tail MCP — connecting…",
+  disconnected: "Tail MCP — MCP server offline",
 };
 
 function iconPath(name: string, size: 16 | 32 | 48): string {
@@ -31,6 +31,6 @@ export async function updateConnectionIcon(
     });
     await browser.action.setTitle({ title: TITLES[status] });
   } catch (error) {
-    console.warn("Browser Control MCP: failed to update toolbar icon", error);
+    console.warn("Tail MCP: failed to update toolbar icon", error);
   }
 }

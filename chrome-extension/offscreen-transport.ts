@@ -1,4 +1,4 @@
-import type { ExtensionMessage } from "@browser-control-mcp/common/extension-messages";
+import type { ExtensionMessage } from "@tail-browser-mcp/common/extension-messages";
 import { browser } from "./browser";
 
 /** Forwards MCP responses from the service worker to the offscreen WebSocket client. */

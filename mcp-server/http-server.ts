@@ -5,7 +5,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { BrowserAPI } from "./browser-api";
 import { createBrowserControlServer } from "./mcp-tools";
 
-import { DEFAULT_MCP_HTTP_PORT } from "@browser-control-mcp/common/ports";
+import { DEFAULT_MCP_HTTP_PORT } from "@tail-browser-mcp/common/ports";
 
 function readHttpConfig() {
   const port = process.env.MCP_HTTP_PORT
@@ -42,7 +42,7 @@ async function main() {
   app.get("/health", (_req, res) => {
     res.json({
       status: "ok",
-      service: "browser-control-mcp",
+      service: "tail-browser-mcp",
       browsers: browserApi.listConnectedBrowsers(),
     });
   });
@@ -141,7 +141,7 @@ async function main() {
 
   app.listen(port, host, () => {
     console.error(
-      `Browser Control MCP HTTP server listening on http://${host}:${port}/mcp`
+      `Tail MCP HTTP server listening on http://${host}:${port}/mcp`
     );
     console.error(
       `Browser extension WebSocket on port ${browserApi.getSelectedPort()}`

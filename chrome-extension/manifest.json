@@ -1,9 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Browser Control MCP (Chrome)",
-  "version": "1.6.1",
+  "name": "Tail MCP (Chrome)",
+  "version": "2.0.0",
   "description": "Local MCP server control for Chrome. Open extension options after install for setup steps.",
   "permissions": ["tabs", "tabGroups", "history", "storage", "scripting", "alarms", "offscreen", "debugger"],
+  "icons": {
+    "16": "assets/icons/disconnected-16.png",
+    "32": "assets/icons/disconnected-32.png",
+    "48": "assets/icons/disconnected-48.png",
+    "128": "assets/icons/disconnected-128.png"
+  },
   "host_permissions": [
     "http://127.0.0.1/*",
     "http://localhost/*",
@@ -15,7 +21,7 @@
     "service_worker": "dist/background.js"
   },
   "action": {
-    "default_title": "Browser Control MCP — MCP server offline",
+    "default_title": "Tail MCP — MCP server offline",
     "default_icon": {
       "16": "assets/icons/disconnected-16.png",
       "32": "assets/icons/disconnected-32.png",

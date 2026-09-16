@@ -1,10 +1,10 @@
 services:
   # One MCP server for all browser extension installs.
   # Each extension: unique browserId in Options, WebSocket port 18789.
-  browser-control-mcp:
+  tail-browser-mcp:
     build: .
-    image: browser-control-mcp
-    container_name: browser-control-mcp
+    image: tail-browser-mcp
+    container_name: tail-browser-mcp
     restart: unless-stopped
     ports:
       - "127.0.0.1:18789:18789"

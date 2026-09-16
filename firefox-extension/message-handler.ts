@@ -1,4 +1,4 @@
-import type { QueryDomExtensionMessage, ServerMessageRequest } from "@browser-control-mcp/common";
+import type { QueryDomExtensionMessage, ServerMessageRequest } from "@tail-browser-mcp/common";
 import { WebsocketClient } from "./client";
 import { isCommandAllowed, isDomainInDenyList, COMMAND_TO_TOOL_ID, addAuditLogEntry } from "./extension-config";
 import {

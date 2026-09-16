@@ -1,11 +1,11 @@
-import type { ServerMessageRequest } from "@browser-control-mcp/common/server-messages";
-import type { ExtensionMessage } from "@browser-control-mcp/common/extension-messages";
-import type { ConnectionStatus } from "@browser-control-mcp/common/websocket-client";
+import type { ServerMessageRequest } from "@tail-browser-mcp/common/server-messages";
+import type { ExtensionMessage } from "@tail-browser-mcp/common/extension-messages";
+import type { ConnectionStatus } from "@tail-browser-mcp/common/websocket-client";
 import { createWebsocketClient } from "./client";
 import type { WebsocketClient } from "./client";
 import { browser } from "./browser";
 
-const BRIDGE_PORT_NAME = "browser-control-mcp-bridge";
+const BRIDGE_PORT_NAME = "tail-mcp-bridge";
 const BRIDGE_COMMAND_TIMEOUT_MS = 14_000;
 
 const clients: WebsocketClient[] = [];
@@ -112,7 +112,7 @@ async function dispatchCommandToServiceWorker(
       });
     });
   } catch (error) {
-    console.warn("Browser Control MCP: failed to forward command to SW", error);
+    console.warn("Tail MCP: failed to forward command to SW", error);
     await wsClient.sendErrorToServer(
       message.correlationId,
       error instanceof Error ? error.message : "Extension service worker unavailable"
@@ -204,7 +204,7 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         ?.sendResourceToServer(message.resource as ExtensionMessage)
         .then(() => sendResponse({ ok: true }))
         .catch((error: unknown) => {
-          console.warn("Browser Control MCP: send resource failed", error);
+          console.warn("Tail MCP: send resource failed", error);
           sendResponse({ ok: false });
         });
       return true;

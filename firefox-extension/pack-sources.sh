@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 FF="$REPO/firefox-extension"
-OUT="$REPO/browser-control-mcp-firefox-source.zip"
+OUT="$REPO/tail-mcp-firefox-source.zip"
 STAGING="$(mktemp -d)"
 trap 'rm -rf "$STAGING"' EXIT
 

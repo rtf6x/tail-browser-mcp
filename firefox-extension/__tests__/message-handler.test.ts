@@ -1,6 +1,6 @@
 import { MessageHandler } from "../message-handler";
 import { WebsocketClient } from "../client";
-import type { ServerMessageRequest } from "@browser-control-mcp/common";
+import type { ServerMessageRequest } from "@tail-browser-mcp/common";
 import { ExtensionConfig } from "../extension-config";
 
 // Mock the WebsocketClient

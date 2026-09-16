@@ -1,19 +1,20 @@
-# Browser Control MCP (Personal)
+# Tail MCP
 
-Personal fork of [Browser Control MCP](https://github.com/eyalzh/browser-control-mcp) — an MCP server paired with a browser extension (Firefox or Chrome) that lets AI assistants work with your browser locally.
+An MCP server paired with a browser extension (Firefox or Chrome) that lets AI assistants work with your browser locally.
 
-**Not affiliated** with the [official AMO add-on](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/). This fork uses a separate extension ID (`browser-control-mcp-personal@rtf6x.local`) and adds HTTP transport for [OpenCode](https://opencode.ai), Docker deployment, and extra page-inspection tools.
+Independent project derived from [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) — **not affiliated** with the [official AMO add-on](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/). Own extension IDs, HTTP transport for [OpenCode](https://opencode.ai), Docker deployment, and additional page-inspection/manipulation tools (screenshot, scroll-to-element, viewport resize).
 
 ## Releases
 
 | Version | Notes |
 |---------|--------|
-| **[v1.6.1](https://github.com/rtf6x/browser-control-mcp/releases/tag/v1.6.1)** (current) | AMO source archive fix, multi-browser `browserId`, WebSocket URLs, ports 18789/18790 |
-| [v1.6.0](https://github.com/rtf6x/browser-control-mcp/releases/tag/v1.6.0) | First v1.6 release (superseded for AMO re-upload) |
+| **[v2.0.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.0)** (current) | Rebrand to Tail MCP, own extension IDs, screenshot/scroll/viewport-resize tools |
+| [v1.6.1](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.1) | AMO source archive fix, multi-browser `browserId`, WebSocket URLs, ports 18789/18790 |
+| [v1.6.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.0) | First v1.6 release (superseded for AMO re-upload) |
 
 **Extensions:** build from this repo — `npm run pack:extensions` (Firefox XPI + AMO source zip + Chrome zip), or load unpacked after `npm run build`.
 
-**MCP server:** `git checkout v1.6.1` (or `main`), then `npm run docker:up`.
+**MCP server:** `git checkout v2.0.0` (or `main`), then `npm run docker:up`.
 
 ## What it does
 
@@ -123,8 +124,8 @@ Compared to full browser-automation MCP servers, this stack is designed for use 
 ### 1. Get the code
 
 ```bash
-git clone https://github.com/rtf6x/browser-control-mcp.git
-cd browser-control-mcp
+git clone https://github.com/rtf6x/tail-browser-mcp.git
+cd tail-browser-mcp
 npm install
 npm run build
 ```
@@ -133,7 +134,7 @@ npm run build
 
 **Firefox** — `about:debugging` → Load Temporary Add-on → `firefox-extension/manifest.json`, or `npm run pack:extensions` (XPI + AMO source zip).
 
-**Chrome** — `chrome://extensions` → Developer mode → Load unpacked → `chrome-extension/`, or use `browser-control-mcp-chrome.zip` from `npm run pack:extensions`.
+**Chrome** — `chrome://extensions` → Developer mode → Load unpacked → `chrome-extension/`, or use `tail-mcp-chrome.zip` from `npm run pack:extensions`.
 
 Open extension **Options** → set a unique **Browser ID** (auto-generated on first run). WebSocket URL **`ws://127.0.0.1:18789`** (default; use `wss://…` for remote servers).
 
@@ -159,7 +160,7 @@ Add to `~/.config/opencode/opencode.json`:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "browser-control": {
+    "tail-mcp": {
       "type": "remote",
       "url": "http://127.0.0.1:18790/mcp",
       "oauth": false,
@@ -213,7 +214,7 @@ Build the extension and MCP server, install the Firefox add-on, then add to `cla
 ```json
 {
   "mcpServers": {
-    "browser-control": {
+    "tail-mcp": {
       "command": "node",
       "args": ["/path/to/repo/mcp-server/dist/server.js"],
       "env": {
@@ -238,12 +239,12 @@ npm start         # HTTP on :18790
 ### Manual Docker run
 
 ```bash
-docker build -t browser-control-mcp .
-docker run -d --name browser-control-mcp --restart unless-stopped \
+docker build -t tail-browser-mcp .
+docker run -d --name tail-browser-mcp --restart unless-stopped \
   -p 127.0.0.1:18789:18789 \
   -p 127.0.0.1:18790:18790 \
   -e CONTAINERIZED=true \
-  browser-control-mcp
+  tail-browser-mcp
 ```
 
 ## Environment variables
@@ -265,7 +266,7 @@ npm run build            # build extension + MCP server
 npm run pack:extensions
 
 # Firefox only
-cd firefox-extension && npm run pack-xpi   # also creates ../browser-control-mcp-firefox-source.zip
+cd firefox-extension && npm run pack-xpi   # also creates ../tail-mcp-firefox-source.zip
 cd firefox-extension && npm test
 
 # MCP server
@@ -300,7 +301,7 @@ Reload browser extensions after extension code changes.
 ## Project layout
 
 ```
-browser-control-mcp/
+tail-browser-mcp/
 ├── common/                 # Shared types, wire envelope, WS client
 ├── firefox-extension/
 ├── chrome-extension/
@@ -312,15 +313,15 @@ browser-control-mcp/
 
 ## Roadmap
 
-- **Chrome Web Store** packaging (currently load-unpacked / zip only)
+- **AMO / Chrome Web Store** submission under the new `Tail MCP` identity (currently self-hosted zip/XPI only)
 
 ## Upstream
 
-This fork is based on [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp). The official project and [AMO listing](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/) are maintained separately.
+This project started as a fork of [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) and has since diverged into an independent project with its own extension IDs and identity. The official project and [AMO listing](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/) are maintained separately.
 
-Repository: [github.com/rtf6x/browser-control-mcp](https://github.com/rtf6x/browser-control-mcp)
+Repository: [github.com/rtf6x/tail-browser-mcp](https://github.com/rtf6x/tail-browser-mcp)
 
-**Fork additions:** multi-browser `browserId` routing, `list-connected-browsers`, localhost trust mode, Chrome extension, HTTP MCP for OpenCode, Docker, page-inspection tools, full WebSocket URLs in extension options.
+**Additions since the original fork:** multi-browser `browserId` routing, `list-connected-browsers`, localhost trust mode, Chrome extension, HTTP MCP for OpenCode, Docker, page-inspection tools, screenshot/scroll-to-element/viewport-resize tools, full WebSocket URLs in extension options.
 
 ## License
 

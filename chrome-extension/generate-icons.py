@@ -46,7 +46,7 @@ def write_circle_png(path: str, size: int, rgb: tuple[int, int, int]) -> None:
 def main() -> None:
     os.makedirs(ROOT, exist_ok=True)
     for name, rgb in COLORS.items():
-        for size in (16, 32, 48):
+        for size in (16, 32, 48, 128):
             write_circle_png(os.path.join(ROOT, f"{name}-{size}.png"), size, rgb)
     print(f"Wrote icons to {ROOT}")
 

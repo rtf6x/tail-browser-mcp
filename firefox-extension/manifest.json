@@ -1,11 +1,11 @@
 {
     "manifest_version": 2,
-    "name": "Browser Control MCP (Personal)",
-    "version": "1.6.1",
+    "name": "Tail MCP (Firefox)",
+    "version": "2.0.0",
     "description": "Local MCP server control for Firefox. Open extension options after install for setup steps.",
     "browser_specific_settings": {
         "gecko": {
-            "id": "browser-control-mcp-personal@rtf6x.local",
+            "id": "tail-mcp@rtf6x.local",
             "strict_min_version": "140.0",
             "data_collection_permissions": {
                 "required": ["none"]

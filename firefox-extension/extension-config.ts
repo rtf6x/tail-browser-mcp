@@ -1,10 +1,10 @@
 /**
- * Configuration management for Browser Control MCP extension
+ * Configuration management for Tail MCP extension
  */
 
-import { ServerMessageRequest } from "@browser-control-mcp/common/server-messages";
-import { normalizeBrowserId } from "@browser-control-mcp/common/handshake-messages";
-import { DEFAULT_WS_URL } from "@browser-control-mcp/common/ws-endpoints";
+import { ServerMessageRequest } from "@tail-browser-mcp/common/server-messages";
+import { normalizeBrowserId } from "@tail-browser-mcp/common/handshake-messages";
+import { DEFAULT_WS_URL } from "@tail-browser-mcp/common/ws-endpoints";
 const AUDIT_LOG_SIZE_LIMIT = 100; // Maximum number of audit log entries to keep
 
 // Define all available tools with their IDs and descriptions

@@ -4,11 +4,11 @@ import { getConfig } from "./extension-config";
 import { ensureOffscreenDocument } from "./ensure-offscreen";
 import { OffscreenTransport } from "./offscreen-transport";
 import { updateConnectionIcon } from "./connection-icon";
-import type { ConnectionStatus } from "@browser-control-mcp/common/websocket-client";
-import type { ServerMessageRequest } from "@browser-control-mcp/common/server-messages";
+import type { ConnectionStatus } from "@tail-browser-mcp/common/websocket-client";
+import type { ServerMessageRequest } from "@tail-browser-mcp/common/server-messages";
 
-const RECONNECT_ALARM = "browser-control-mcp-reconnect";
-const BRIDGE_PORT_NAME = "browser-control-mcp-bridge";
+const RECONNECT_ALARM = "tail-mcp-reconnect";
+const BRIDGE_PORT_NAME = "tail-mcp-bridge";
 const handlers: MessageHandler[] = [];
 let startPromise: Promise<void> | null = null;
 let reconnectAlarmRegistered = false;
@@ -32,7 +32,7 @@ async function ensureHandlersReady(): Promise<void> {
   }
   await startExtension();
   if (handlers.length === 0) {
-    throw new Error("Browser Control MCP handlers not initialized");
+    throw new Error("Tail MCP handlers not initialized");
   }
 }
 
@@ -86,7 +86,7 @@ browser.runtime.onConnect.addListener((port) => {
         port.postMessage({ type: "mcp-bridge-result", requestId, ok: true });
       })
       .catch(async (error: unknown) => {
-        console.warn("Browser Control MCP: command handler error", error);
+        console.warn("Tail MCP: command handler error", error);
         const transport = new OffscreenTransport(clientIndex);
         if (error instanceof Error && cmd?.correlationId) {
           await transport.sendErrorToServer(cmd.correlationId, error.message);
@@ -110,7 +110,7 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void startExtension().then(
       () => sendResponse({ ok: true }),
       (error) => {
-        console.error("Browser Control MCP: start after offscreen ready failed", error);
+        console.error("Tail MCP: start after offscreen ready failed", error);
         sendResponse({ ok: false });
       }
     );
@@ -121,7 +121,7 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     void updateConnectionIcon(message.status as ConnectionStatus).then(
       () => sendResponse({ ok: true }),
       (error) => {
-        console.warn("Browser Control MCP: failed to update toolbar icon", error);
+        console.warn("Tail MCP: failed to update toolbar icon", error);
         sendResponse({ ok: false });
       }
     );
@@ -135,7 +135,7 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     )
       .then(() => sendResponse({ ok: true }))
       .catch(async (error: unknown) => {
-        console.warn("Browser Control MCP: command handler error", error);
+        console.warn("Tail MCP: command handler error", error);
         const transport = new OffscreenTransport(message.clientIndex as number);
         if (error instanceof Error && message.message?.correlationId) {
           await transport.sendErrorToServer(
@@ -186,7 +186,7 @@ async function bootstrap(config: Awaited<ReturnType<typeof getConfig>>): Promise
   await sendOffscreenInit(config);
   initializedConfigKey = key;
   await setupReconnectAlarm();
-  console.log("Browser Control MCP (Chrome) initialized via offscreen document");
+  console.log("Tail MCP (Chrome) initialized via offscreen document");
 }
 
 async function startExtension(): Promise<void> {
@@ -244,7 +244,7 @@ async function setupReconnectAlarm(): Promise<void> {
         rebuildHandlers(config);
         await reconnectOffscreen();
       } catch (error) {
-        console.warn("Browser Control MCP: reconnect alarm failed", error);
+        console.warn("Tail MCP: reconnect alarm failed", error);
         initializedConfigKey = "";
         void startExtension();
       }
@@ -255,7 +255,7 @@ async function setupReconnectAlarm(): Promise<void> {
 void ensureOffscreenDocument()
   .then(() => startExtension())
   .catch((error) => {
-    console.error("Browser Control MCP: failed to create offscreen document", error);
+    console.error("Tail MCP: failed to create offscreen document", error);
   });
 
 void updateConnectionIcon("disconnected");

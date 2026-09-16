@@ -7,20 +7,20 @@ import type {
   TabContentExtensionMessage,
   ServerMessageRequest,
   ExtensionError,
-} from "@browser-control-mcp/common";
+} from "@tail-browser-mcp/common";
 import {
   BROWSER_ID_PATTERN,
   isRegisterMessage,
   type ExtensionRegisterMessage,
-} from "@browser-control-mcp/common/handshake-messages";
+} from "@tail-browser-mcp/common/handshake-messages";
 import {
   hasPayloadEnvelope,
   packEnvelope,
-} from "@browser-control-mcp/common/wire-envelope";
+} from "@tail-browser-mcp/common/wire-envelope";
 import { isPortInUse } from "./util";
 import * as crypto from "crypto";
 
-import { DEFAULT_WS_PORT } from "@browser-control-mcp/common/ports";
+import { DEFAULT_WS_PORT } from "@tail-browser-mcp/common/ports";
 const EXTENSION_RESPONSE_TIMEOUT_MS = 15_000;
 const SCRIPT_RESPONSE_TIMEOUT_MS = 15_000;
 

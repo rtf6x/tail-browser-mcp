@@ -2,7 +2,7 @@ import type {
   QueryDomExtensionMessage,
   ServerMessageRequest,
   SetViewportSizeExtensionMessage,
-} from "@browser-control-mcp/common";
+} from "@tail-browser-mcp/common";
 import { browser } from "./browser";
 import type { ServerTransport } from "./server-transport";
 import {

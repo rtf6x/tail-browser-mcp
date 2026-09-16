@@ -1,5 +1,5 @@
-Browser Control MCP (Personal) — source code for AMO review
-Version: 1.6.1
+Tail MCP (Firefox) — source code for AMO review
+Version: 2.0.0
 
 Requirements
 - Node.js 18 or newer
@@ -8,7 +8,7 @@ Requirements
 Directory layout (archive root = add-on source)
 - manifest.json, *.ts, options.html, assets/  — add-on source
 - dist/                                         — esbuild output referenced by manifest (rebuilt in step 4)
-- common/                                       — shared dependency (@browser-control-mcp/common)
+- common/                                         — shared dependency (@tail-browser-mcp/common)
 
 Build instructions
 1. Unzip this archive to a directory (manifest.json must be at that directory root).
@@ -22,7 +22,7 @@ Expected output
 
 Verify XPI (optional)
 - npm run pack-xpi
-- Creates browser-control-mcp-dev.xpi in the parent directory when run from a full git checkout;
+- Creates tail-mcp-dev.xpi in the parent directory when run from a full git checkout;
   from this archive alone, zip manifest.json dist options.html assets manually after build.
 
 Build tool

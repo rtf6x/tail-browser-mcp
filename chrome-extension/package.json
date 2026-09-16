@@ -1,16 +1,16 @@
 {
   "name": "chrome-extension",
-  "version": "1.6.1",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "build": "python3 generate-icons.py && esbuild background.ts --bundle --outfile=dist/background.js --format=iife --platform=browser && esbuild offscreen.ts --bundle --outfile=dist/offscreen.js --format=iife --platform=browser && esbuild options.ts --bundle --outfile=dist/options.js --format=iife --platform=browser",
-    "pack-zip": "npm run build && rm -f ../browser-control-mcp-chrome.zip && zip -r ../browser-control-mcp-chrome.zip manifest.json dist offscreen.html options.html assets -x '*.DS_Store'",
+    "pack-zip": "npm run build && rm -f ../tail-mcp-chrome.zip && zip -r ../tail-mcp-chrome.zip manifest.json dist offscreen.html options.html assets -x '*.DS_Store'",
     "pack": "npm run pack-zip"
   },
   "license": "MIT",
-  "description": "Browser Control MCP Chrome Extension",
+  "description": "Tail MCP Chrome Extension",
   "devDependencies": {
-    "@browser-control-mcp/common": "../common",
+    "@tail-browser-mcp/common": "../common",
     "@types/chrome": "^0.0.304",
     "esbuild": "0.25.1",
     "typescript": "^5.8.2"

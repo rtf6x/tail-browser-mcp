@@ -55,7 +55,7 @@ export function healthUrlFromWsUrl(wsUrl: string): string {
   healthUrl.search = "";
   healthUrl.hash = "";
 
-  // Browser Control MCP convention: HTTP (incl. /health) is on WS port + 1 when port is explicit.
+  // Tail MCP convention: HTTP (incl. /health) is on WS port + 1 when port is explicit.
   if (url.port) {
     healthUrl.port = String(parseInt(url.port, 10) + 1);
   }

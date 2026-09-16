@@ -1,6 +1,6 @@
 {
-  "name": "browser-control-mcp",
-  "version": "1.6.1",
+  "name": "tail-browser-mcp",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "postinstall": "npm install --prefix common && npm install --prefix mcp-server && npm install --prefix firefox-extension && npm install --prefix chrome-extension",
@@ -8,7 +8,7 @@
     "pack:extensions": "npm run pack --prefix firefox-extension && npm run pack --prefix chrome-extension",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f browser-control-mcp"
+    "docker:logs": "docker compose logs -f tail-browser-mcp"
   },
   "devDependencies": {
     "nx": "22.3.3"

@@ -1,4 +1,4 @@
-# Contributing to Browser Control MCP
+# Contributing to Tail MCP
 
 We welcome pull requests for new features, tools, and bug fixes.
 

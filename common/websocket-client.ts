@@ -114,7 +114,7 @@ export class WebsocketClient {
         : undefined;
       this.socket.send(packEnvelope(resource, signature));
     } catch (error) {
-      console.warn("Browser Control MCP: failed to send response", error);
+      console.warn("Tail MCP: failed to send response", error);
     }
   }
 
@@ -218,7 +218,7 @@ export class WebsocketClient {
       this.reconnectDelayMs = MIN_RECONNECT_MS;
       this.offlineNoticeShown = false;
       console.log(
-        "Browser Control MCP: connected to",
+        "Tail MCP: connected to",
         this.wsUrl,
         "as",
         this.browserId
@@ -262,7 +262,7 @@ export class WebsocketClient {
         : undefined;
       this.socket.send(packEnvelope(payload, signature));
     } catch (error) {
-      console.warn("Browser Control MCP: failed to register", error);
+      console.warn("Tail MCP: failed to register", error);
     }
   }
 
@@ -287,7 +287,7 @@ export class WebsocketClient {
       const payload = await this.verifyPayload(raw);
       if (payload === null) {
         if (hasPayloadEnvelope(raw) && this.messageCallback) {
-          console.warn("Browser Control MCP: invalid message signature");
+          console.warn("Tail MCP: invalid message signature");
           const req = raw.payload as ServerMessageRequest;
           if (req?.correlationId) {
             await this.sendErrorToServer(
@@ -300,7 +300,7 @@ export class WebsocketClient {
       }
 
       if (isRegisterAckMessage(payload)) {
-        console.log("Browser Control MCP: registered as", payload.browserId);
+        console.log("Tail MCP: registered as", payload.browserId);
         return;
       }
 
@@ -309,7 +309,7 @@ export class WebsocketClient {
       }
       await this.messageCallback(payload as ServerMessageRequest);
     } catch (error) {
-      console.warn("Browser Control MCP: failed to handle message", error);
+      console.warn("Tail MCP: failed to handle message", error);
     }
   }
 
@@ -319,7 +319,7 @@ export class WebsocketClient {
     }
     this.offlineNoticeShown = true;
     console.warn(
-      `Browser Control MCP: MCP server offline (${this.wsUrl}, health ${this.healthUrl}). Will retry without opening WebSocket.`
+      `Tail MCP: MCP server offline (${this.wsUrl}, health ${this.healthUrl}). Will retry without opening WebSocket.`
     );
   }
 

@@ -1,16 +1,16 @@
 {
   "name": "firefox-extension",
-  "version": "1.6.1",
+  "version": "2.0.0",
   "main": "dist/background.js",
   "scripts": {
     "build": "esbuild background.ts --bundle --outfile=dist/background.js && esbuild options.ts --bundle --outfile=dist/options.js",
     "pack-sources": "bash pack-sources.sh",
-    "pack-xpi": "npm run pack-sources && rm -f ../browser-control-mcp-dev.xpi && cd . && zip -r ../browser-control-mcp-dev.xpi manifest.json dist options.html assets -x '*.DS_Store'",
+    "pack-xpi": "npm run pack-sources && rm -f ../tail-mcp-dev.xpi && cd . && zip -r ../tail-mcp-dev.xpi manifest.json dist options.html assets -x '*.DS_Store'",
     "pack": "npm run pack-xpi",
     "test": "jest"
   },
   "license": "MIT",
-  "description": "Browser Control MCP Firefox Extension / Add-on",
+  "description": "Tail MCP Firefox Extension / Add-on",
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "esbuild": "0.25.1",
@@ -20,7 +20,7 @@
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.2",
     "@types/firefox-webext-browser": "^120.0.4",
-    "@browser-control-mcp/common": "../common"
+    "@tail-browser-mcp/common": "../common"
   },
   "nx": {}
 }
