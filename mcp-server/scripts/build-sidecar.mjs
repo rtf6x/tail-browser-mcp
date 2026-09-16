@@ -42,7 +42,7 @@ execFileSync(
     "--target=node22",
     `--outfile=${bundlePath}`,
   ],
-  { cwd: mcpServerDir, stdio: "inherit" }
+  { cwd: mcpServerDir, stdio: "inherit", shell: process.platform === "win32" }
 );
 
 writeFileSync(
@@ -95,7 +95,7 @@ const postjectArgs = [
 if (process.platform === "darwin") {
   postjectArgs.push("--macho-segment-name", "NODE_SEA");
 }
-execFileSync("npx", postjectArgs, { cwd: mcpServerDir, stdio: "inherit" });
+execFileSync("npx", postjectArgs, { cwd: mcpServerDir, stdio: "inherit", shell: process.platform === "win32" });
 
 if (process.platform === "darwin") {
   execFileSync("codesign", ["--sign", "-", outExePath], { stdio: "inherit" });
