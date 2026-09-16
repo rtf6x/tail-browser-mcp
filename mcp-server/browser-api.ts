@@ -74,7 +74,7 @@ export class BrowserAPI {
       throw new Error(this.initError);
     }
 
-    const host = process.env.CONTAINERIZED ? "0.0.0.0" : "localhost";
+    const host = process.env.CONTAINERIZED ? "0.0.0.0" : "127.0.0.1";
 
     this.wsServer = new WebSocketServer({ host, port });
 
