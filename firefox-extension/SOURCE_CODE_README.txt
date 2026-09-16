@@ -1,4 +1,4 @@
-Tail MCP (Firefox) — source code for AMO review
+Tail MCP — source code for AMO review
 Version: 2.0.0
 
 Requirements
