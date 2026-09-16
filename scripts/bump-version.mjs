@@ -11,7 +11,6 @@ const targets = [
   "package.json",
   "common/package.json",
   "mcp-server/package.json",
-  "mcp-server/manifest.json",
   "chrome-extension/package.json",
   "chrome-extension/manifest.json",
   "firefox-extension/package.json",
