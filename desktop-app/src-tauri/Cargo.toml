@@ -1,6 +1,6 @@
 [package]
 name = "tail-mcp-desktop"
-version = "2.0.4"
+version = "2.0.5"
 description = "Tail MCP tray app — runs the Tail MCP server as a background process with a menu-bar/tray icon"
 authors = ["rtf6x"]
 edition = "2021"

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tail MCP (Chrome)",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Local MCP server control for Chrome. Open extension options after install for setup steps.",
   "homepage_url": "https://github.com/rtf6x/tail-browser-mcp",
   "permissions": ["tabs", "tabGroups", "history", "storage", "scripting", "alarms", "offscreen", "debugger"],
