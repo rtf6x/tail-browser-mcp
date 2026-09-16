@@ -330,6 +330,8 @@ fn main() {
             running: AtomicBool::new(false),
         })
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let handle = app.handle().clone();
             build_tray(&handle)?;
             start_sidecar(&handle);
