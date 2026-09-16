@@ -1,7 +1,7 @@
 {
     "dxt_version": "0.1",
     "name": "tail-browser-mcp",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "display_name": "Tail MCP",
     "description": "Control Mozilla Firefox: tabs, history and web content (privacy aware)",
     "long_description": "This MCP server provides AI assistants with access to browser tab management, history, page search, and webpage content through a local MCP connection.\n\nInstall the Tail MCP browser extension (Firefox or Chrome from this repository). Each install registers with a unique browserId on ws://127.0.0.1:18789. Use list-connected-browsers and pass browserId in tool calls when multiple browsers are connected.\n\nBefore accessing webpage content, explicit user consent is required per domain in the extension. No shared secret is required by default (localhost trust mode); set EXTENSION_SECRET optionally for HMAC signing.",
