@@ -402,19 +402,25 @@
   <div class="container main-content" id="main-content">
     <h1>Tail MCP</h1>
     <p>One extension install ↔ one <strong>browserId</strong> on the shared MCP server. <strong id="extension-version"></strong></p>
+    <p><a class="setup-link" href="https://github.com/rtf6x/tail-browser-mcp" target="_blank" rel="noopener noreferrer">github.com/rtf6x/tail-browser-mcp</a> — source, full setup guide, releases.</p>
 
     <div class="section-container">
       <h2>Getting started after install</h2>
       <div class="section-content setup-steps">
-        <p>Multiple browser installs can share <em>one</em> MCP server. Each needs a unique <strong>browserId</strong> and the same WebSocket URL.</p>
+        <p>This extension is a remote control. It needs the Tail MCP server running somewhere it can reach (your machine, a LAN box, or a small VPS) before it can do anything.</p>
         <ol>
           <li>
-            <strong>Set browserId</strong>
-            Scroll to <em>Browser ID</em> below — unique per install (e.g. <code>browser-work</code>).
+            <strong>Get the server</strong>
+            <pre>git clone https://github.com/rtf6x/tail-browser-mcp
+cd tail-browser-mcp</pre>
           </li>
           <li>
             <strong>Start MCP server</strong>
             <pre>npm run docker:up</pre>
+          </li>
+          <li>
+            <strong>Set browserId</strong>
+            Scroll to <em>Browser ID</em> below — unique per install (e.g. <code>browser-work</code>).
           </li>
           <li>
             <strong>WebSocket URL</strong>

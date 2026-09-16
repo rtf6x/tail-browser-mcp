@@ -3,6 +3,7 @@
     "name": "Tail MCP",
     "version": "2.0.1",
     "description": "Local MCP server control for Firefox. Open extension options after install for setup steps.",
+    "homepage_url": "https://github.com/rtf6x/tail-browser-mcp",
     "browser_specific_settings": {
         "gecko": {
             "id": "tail-mcp@rtf6x.local",
