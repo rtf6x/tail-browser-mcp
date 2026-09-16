@@ -10,13 +10,15 @@ Independent project derived from [eyalzh/browser-control-mcp](https://github.com
 
 | Version | Notes |
 |---------|--------|
-| **[v2.0.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.0)** (current) | Rebrand to Tail MCP, own extension IDs, screenshot/scroll/viewport-resize tools |
+| **[v2.0.10](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.10)** (current) | Fix: WebSocket server now binds `127.0.0.1` (was `localhost`, which resolved IPv6-only on some machines and silently blocked extension connections) |
+| [v2.0.7](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.7) | Desktop tray app (macOS/Windows/Linux) — bundles the MCP server as a single native binary, no Docker/npm/terminal required |
+| [v2.0.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.0) | Rebrand to Tail MCP, own extension IDs, screenshot/scroll/viewport-resize tools |
 | [v1.6.1](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.1) | AMO source archive fix, multi-browser `browserId`, WebSocket URLs, ports 18789/18790 |
 | [v1.6.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.0) | First v1.6 release (superseded for AMO re-upload) |
 
 **Extensions:** build from this repo — `npm run pack:extensions` (Firefox XPI + AMO source zip + Chrome zip), or load unpacked after `npm run build`.
 
-**MCP server:** `git checkout v2.0.0` (or `main`), then `npm run docker:up`.
+**MCP server:** `git checkout main` (or a specific [release tag](#releases)), then `npm run docker:up` — or use the [desktop app](#desktop-app-no-docker-no-terminal) instead.
 
 ## What it does
 
