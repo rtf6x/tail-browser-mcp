@@ -54,4 +54,11 @@ dist
 # Web extension dist
 web-ext-artifacts/
 
+# Packed extension archives (built by npm run pack:extensions)
+/*.zip
+/*.xpi
+
+# JetBrains IDE local state
+.idea/
+
 .DS_Store

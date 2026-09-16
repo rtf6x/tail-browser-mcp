@@ -1,4 +1,4 @@
-name: Build and Release MCP Server as DXT
+name: Build and Release extensions + MCP Server DXT
 
 on:
   release:
@@ -25,16 +25,28 @@ jobs:
       run: |
         npm run build --prefix common
         cd mcp-server && npm run build && npm run pack-dxt
-    
-    - name: Rename package file with version
+
+    - name: Rename DXT package with version
       run: |
         cd mcp-server
         mv mcp-server.dxt mcp-server-${{ github.event.release.tag_name }}.dxt
-    
-    - name: Upload package to release
+
+    - name: Build and pack browser extensions
+      run: npm run pack:extensions
+
+    - name: Rename extension packages with version
+      run: |
+        mv tail-mcp-chrome.zip tail-mcp-chrome-${{ github.event.release.tag_name }}.zip
+        mv tail-mcp-dev.xpi tail-mcp-firefox-${{ github.event.release.tag_name }}.xpi
+        mv tail-mcp-firefox-source.zip tail-mcp-firefox-source-${{ github.event.release.tag_name }}.zip
+
+    - name: Upload packages to release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh release upload ${{ github.event.release.tag_name }} \
           ./mcp-server/mcp-server-${{ github.event.release.tag_name }}.dxt \
+          ./tail-mcp-chrome-${{ github.event.release.tag_name }}.zip \
+          ./tail-mcp-firefox-${{ github.event.release.tag_name }}.xpi \
+          ./tail-mcp-firefox-source-${{ github.event.release.tag_name }}.zip \
           --clobber
