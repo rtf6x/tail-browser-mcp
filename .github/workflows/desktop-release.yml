@@ -1,0 +1,92 @@
+name: Build and upload desktop app
+
+# Manual only — desktop bundles take several minutes per OS to build and
+# don't need to run on every auto-patch release. Trigger explicitly when a
+# desktop-app change actually needs new binaries:
+#   gh workflow run desktop-release.yml -f tag=v2.0.7
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to attach the desktop bundles to (must already exist, e.g. v2.0.7)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop-app:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.tag }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'npm'
+
+    - name: Install Linux Tauri build dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev patchelf build-essential
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Rust build
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: desktop-app/src-tauri
+
+    - name: Install common dependencies
+      working-directory: common
+      run: npm install
+
+    - name: Install mcp-server dependencies
+      working-directory: mcp-server
+      run: npm install
+
+    - name: Build common
+      working-directory: common
+      run: npm run build
+
+    - name: Build sidecar for ${{ matrix.target }}
+      working-directory: mcp-server
+      run: node scripts/build-sidecar.mjs ${{ matrix.target }} ../desktop-app/src-tauri/binaries
+
+    - name: Build Tauri app
+      working-directory: desktop-app/src-tauri
+      run: npx --yes @tauri-apps/cli@latest build
+
+    - name: Upload desktop bundles to release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        assets=()
+        while IFS= read -r -d '' f; do
+          assets+=("$f")
+        done < <(find desktop-app/src-tauri/target/release/bundle \
+          -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' \) -print0)
+        if [ "${#assets[@]}" -eq 0 ]; then
+          echo "No desktop bundle artifacts found for ${{ matrix.target }}" >&2
+          exit 1
+        fi
+        gh release upload ${{ inputs.tag }} "${assets[@]}" --clobber

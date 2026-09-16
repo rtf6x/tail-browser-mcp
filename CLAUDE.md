@@ -45,6 +45,10 @@ cd mcp-server && node scripts/build-sidecar.mjs <rust-target-triple> ../desktop-
 cd desktop-app/src-tauri && npx @tauri-apps/cli build   # or `dev` while iterating
 ```
 
+CI builds desktop bundles (macOS/Windows/Linux) only on manual trigger,
+not on every auto-patch release — `gh workflow run desktop-release.yml -f tag=v2.0.7`
+against an existing release tag.
+
 ## Architecture
 
 Monorepo with five main parts:
