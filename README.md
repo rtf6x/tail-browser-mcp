@@ -19,7 +19,7 @@ Personal fork of [Browser Control MCP](https://github.com/eyalzh/browser-control
 
 - **Tabs** — open, close, list, reorder, group
 - **History** — search recent browsing history
-- **Pages** — read text/links, find/highlight, run JS, query DOM, read console output (with per-domain consent)
+- **Pages** — read text/links, find/highlight, scroll to element, run JS, query DOM, read console output, screenshot, resize viewport for responsive testing (with per-domain consent)
 - **Local-only** — WebSocket on `127.0.0.1`; optional HMAC secret; no cloud backend
 
 ## Architecture
@@ -81,10 +81,13 @@ All tools can be enabled or disabled individually in the extension options page 
 | `evaluate-script-in-tab` | Run JSON-serializable JS in the page | **consent** |
 | `query-dom-in-tab` | CSS selector → text, HTML, or list | **consent** |
 | `get-console-messages-in-tab` | Read console output from a tab | **consent** |
+| `scroll-to-element-in-tab` | Scroll a CSS selector's element into view | **consent** |
+| `capture-screenshot-in-tab` | Screenshot a tab, optionally cropped to an element | **consent** |
+| `set-viewport-size-in-tab` | Resize a tab's viewport for responsive/mobile testing (Chrome: exact width/height/DPI/mobile emulation via CDP; Firefox: window-resize approximation, `mobile`/`deviceScaleFactor` ignored) | **consent** |
 
 All action tools accept optional **`browserId`**. Omit it when exactly one browser is connected.
 
-The three page-inspection tools (`evaluate-script`, `query-dom`, `get-console-messages`) are **disabled by default** in extension settings.
+The page-inspection and page-manipulation tools (`evaluate-script`, `query-dom`, `get-console-messages`, `capture-screenshot`, `set-viewport-size`) are **disabled by default** in extension settings.
 
 ### Example prompts
 
@@ -99,6 +102,7 @@ The three page-inspection tools (`evaluate-script`, `query-dom`, `get-console-me
 - *"Open HN, read the top story and summarize the comments."*
 - *"On the open tab, run a DOM query for all `h2` headings and list them."*
 - *"Check console errors on the current page."*
+- *"Resize the tab to an iPhone SE viewport and screenshot it to check the mobile layout."*
 
 ## Security model
 
@@ -107,9 +111,10 @@ Compared to full browser-automation MCP servers, this stack is designed for use 
 - **Localhost-only** — WebSocket on `127.0.0.1:18789`; no shared secret by default
 - Optional **`EXTENSION_SECRET`** on the server for HMAC signing
 - Per-tool toggles and an audit log in the extension options
-- Host permissions and domain consent before reading or scripting pages
+- Host permissions and domain consent before reading, scripting, or resizing pages
 - No analytics or remote data collection (`data_collection_permissions: none`)
 - No runtime third-party dependencies in the shipped extension
+- Chrome only: `set-viewport-size-in-tab` requires the `debugger` permission, granted at install (Chrome disallows `debugger` as an optional/toggleable permission) — using it briefly attaches Chrome DevTools Protocol to the target tab
 
 **Caution:** when page tools are enabled, the assistant can execute JavaScript and read page content on domains you approve. Review tool calls and keep sensitive tools disabled if you do not need them.
 
