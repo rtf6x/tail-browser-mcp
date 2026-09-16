@@ -1,4 +1,4 @@
-import WebSocket from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import type {
   ExtensionMessage,
   BrowserTab,
@@ -55,7 +55,7 @@ interface WireEnvelope {
 export class BrowserAPI {
   private browsers = new Map<string, BrowserConnection>();
   private wsToBrowserId = new Map<WebSocket, string>();
-  private wsServer: WebSocket.Server | null = null;
+  private wsServer: WebSocketServer | null = null;
   private sharedSecret: string | null = null;
   private initError: string | null = null;
   private browserQueues = new Map<string, Promise<unknown>>();
@@ -76,7 +76,7 @@ export class BrowserAPI {
 
     const host = process.env.CONTAINERIZED ? "0.0.0.0" : "localhost";
 
-    this.wsServer = new WebSocket.Server({ host, port });
+    this.wsServer = new WebSocketServer({ host, port });
 
     console.error(`Starting WebSocket server on ${host}:${port}`);
     if (!this.sharedSecret) {

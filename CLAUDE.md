@@ -39,13 +39,20 @@ npm run docker:down
 npm run docker:logs
 ```
 
+### Desktop app (Tauri tray app)
+```bash
+cd mcp-server && node scripts/build-sidecar.mjs <rust-target-triple> ../desktop-app/src-tauri/binaries
+cd desktop-app/src-tauri && npx @tauri-apps/cli build   # or `dev` while iterating
+```
+
 ## Architecture
 
-Monorepo with four main parts:
+Monorepo with five main parts:
 
 1. **mcp-server** — MCP server (Streamable HTTP) and WebSocket listener for browser extensions
 2. **firefox-extension** / **chrome-extension** — browser add-ons that execute tab/page actions
 3. **common** — shared TypeScript types, WebSocket client, wire envelope, handshake (`browserId` registration)
+4. **desktop-app** — Tauri v2 tray app; spawns mcp-server (built into a single native binary via Node's SEA feature, see `mcp-server/scripts/build-sidecar.mjs`) as a managed sidecar process, no separate Node/Docker install required by end users
 
 ### Communication flow
 

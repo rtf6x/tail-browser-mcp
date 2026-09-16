@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "No windows/webview in this app; all sidecar and tray control happens from Rust, which is not gated by the ACL. Kept minimal for schema completeness.",
+  "windows": [],
+  "permissions": ["core:default"]
+}

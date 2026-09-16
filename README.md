@@ -167,6 +167,24 @@ Add to `~/.config/opencode/opencode.json`:
 
 Restart OpenCode. One MCP URL: `http://127.0.0.1:18790/mcp`. Call `list-connected-browsers` to see IDs; pass `browserId` in other tools when multiple browsers are connected.
 
+## Desktop app (no Docker, no terminal)
+
+For people who just want to run the server without touching Docker, npm, or a terminal: a tray/menu-bar app that bundles the whole MCP server into a single native binary.
+
+1. Download the build for your OS from the [latest release](../../releases/latest):
+   - **macOS** — `Tail MCP_<version>_aarch64.dmg` (Apple Silicon) or `..._x64.dmg` (Intel)
+   - **Windows** — `Tail MCP_<version>_x64-setup.exe`
+   - **Linux** — `.AppImage` or `.deb` (community-supported, less tested — please file a bug if something breaks)
+2. Install and launch it. A tray/menu-bar icon appears and starts the server automatically (WebSocket on `18789`, MCP HTTP on `18790` — same defaults as the Docker setup).
+3. Install a browser extension as in step 2 above and point it at `ws://127.0.0.1:18789`.
+4. Right-click the tray icon for status, the list of connected browsers, start/stop, "Launch at startup", log/config file access, and quit. Config (`ws_port`/`http_port`/`secret`) is a plain JSON file — "Reveal config file" opens it; restart the app after editing it.
+
+**These builds are unsigned** (no Apple/Windows developer certificate). Your OS will warn about an "unidentified developer" / unrecognized app on first launch — this is expected, not a sign of tampering:
+- **macOS**: right-click the app → **Open** → **Open** again in the dialog (only needed once). Opening normally via double-click will refuse to launch.
+- **Windows**: click **More info** on the SmartScreen prompt → **Run anyway**.
+
+If a coding agent/harness has already cloned this repo and set up the extension, it can equally well `npm run docker:up` (see Quick start above) instead of the desktop app — both expose the identical MCP server on the same ports.
+
 ## Multiple browsers, one MCP server
 
 One Docker container serves every browser/profile you want the AI to control.

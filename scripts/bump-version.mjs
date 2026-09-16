@@ -15,7 +15,11 @@ const targets = [
   "chrome-extension/manifest.json",
   "firefox-extension/package.json",
   "firefox-extension/manifest.json",
+  "desktop-app/src-tauri/tauri.conf.json",
 ];
+
+// Cargo.toml uses TOML syntax (`version = "x.y.z"`), not JSON.
+const cargoTargets = ["desktop-app/src-tauri/Cargo.toml"];
 
 const currentVersion = JSON.parse(
   readFileSync(join(rootDir, "package.json"), "utf8"),
@@ -36,6 +40,17 @@ for (const relPath of targets) {
     throw new Error(`No "version" field found in ${relPath}`);
   }
   const updated = original.replace(versionLinePattern, `"version": "${nextVersion}"`);
+  writeFileSync(filePath, updated);
+}
+
+for (const relPath of cargoTargets) {
+  const filePath = join(rootDir, relPath);
+  const original = readFileSync(filePath, "utf8");
+  const versionLinePattern = /^version\s*=\s*"[^"]*"/m;
+  if (!versionLinePattern.test(original)) {
+    throw new Error(`No "version" field found in ${relPath}`);
+  }
+  const updated = original.replace(versionLinePattern, `version = "${nextVersion}"`);
   writeFileSync(filePath, updated);
 }
 
