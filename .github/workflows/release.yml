@@ -86,13 +86,17 @@ jobs:
       with:
         workspaces: desktop-app/src-tauri
 
-    - name: Install dependencies
-      run: |
-        npm install --prefix common
-        npm install --prefix mcp-server
+    - name: Install common dependencies
+      working-directory: common
+      run: npm install
+
+    - name: Install mcp-server dependencies
+      working-directory: mcp-server
+      run: npm install
 
     - name: Build common
-      run: npm run build --prefix common
+      working-directory: common
+      run: npm run build
 
     - name: Build sidecar for ${{ matrix.target }}
       working-directory: mcp-server
@@ -107,7 +111,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: bash
       run: |
-        mapfile -d '' -t assets < <(find desktop-app/src-tauri/target/release/bundle \
+        assets=()
+        while IFS= read -r -d '' f; do
+          assets+=("$f")
+        done < <(find desktop-app/src-tauri/target/release/bundle \
           -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' \) -print0)
         if [ "${#assets[@]}" -eq 0 ]; then
           echo "No desktop bundle artifacts found for ${{ matrix.target }}" >&2
