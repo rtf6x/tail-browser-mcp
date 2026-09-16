@@ -7,7 +7,6 @@ We welcome pull requests for new features, tools, and bug fixes.
 ### Testing
 - Update Firefox extension unit tests when changing extension behavior
 - Test MCP HTTP transport with OpenCode (`http://127.0.0.1:18790/mcp`)
-- Test stdio transport with Claude Desktop if touching `server.ts`
 - Test Firefox and Chrome extensions after WebSocket or handshake changes
 
 ### Compatibility

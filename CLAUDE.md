@@ -29,8 +29,7 @@ cd firefox-extension && npm test
 
 ### Start MCP Server
 ```bash
-cd mcp-server && npm start          # HTTP on :18790 (OpenCode)
-cd mcp-server && npm run start:stdio  # stdio (Claude Desktop)
+cd mcp-server && npm start          # HTTP on :18790 (OpenCode, Claude Code, any MCP-over-HTTP client)
 ```
 
 ### Docker
@@ -40,23 +39,18 @@ npm run docker:down
 npm run docker:logs
 ```
 
-### Package DXT
-```bash
-cd mcp-server && npm run pack-dxt
-```
-
 ## Architecture
 
 Monorepo with four main parts:
 
-1. **mcp-server** — MCP server (HTTP + stdio) and WebSocket listener for browser extensions
+1. **mcp-server** — MCP server (Streamable HTTP) and WebSocket listener for browser extensions
 2. **firefox-extension** / **chrome-extension** — browser add-ons that execute tab/page actions
 3. **common** — shared TypeScript types, WebSocket client, wire envelope, handshake (`browserId` registration)
 
 ### Communication flow
 
 ```
-OpenCode / Claude  ──MCP (HTTP :18790 or stdio)──►  mcp-server
+OpenCode / Claude  ──MCP (Streamable HTTP :18790)──►  mcp-server
                                                       │
                          ws://127.0.0.1:18789         │  Browser registry
               ┌──────────────────────────────────────┤  (browserId → WebSocket)
@@ -73,8 +67,7 @@ OpenCode / Claude  ──MCP (HTTP :18790 or stdio)──►  mcp-server
 
 | Path | Role |
 |------|------|
-| `mcp-server/http-server.ts` | HTTP MCP transport (OpenCode) |
-| `mcp-server/server.ts` | stdio MCP transport (Claude Desktop) |
+| `mcp-server/http-server.ts` | HTTP MCP transport (OpenCode, Claude Code, etc.) |
 | `mcp-server/browser-api.ts` | WebSocket server, browser registry, routing |
 | `mcp-server/mcp-tools.ts` | MCP tool definitions |
 | `common/handshake-messages.ts` | `register` / `register-ack`, `browserId` validation |

@@ -48,9 +48,6 @@ dist
 
 .nx
 
-# DXT
-*.dxt
-
 # Web extension dist
 web-ext-artifacts/
 

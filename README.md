@@ -28,7 +28,7 @@ Independent project derived from [eyalzh/browser-control-mcp](https://github.com
 ```
                     ┌─────────────────────────────────────┐
   OpenCode          │           MCP Server                │
-  Claude Desktop ──►│  HTTP :18790 / stdio                 │
+  Claude / others ─►│  HTTP :18790 (Streamable HTTP)       │
                     │  WebSocket :18789 (browser registry) │
                     └──────────┬────────────┬─────────────┘
                                │            │
@@ -44,12 +44,7 @@ Independent project derived from [eyalzh/browser-control-mcp](https://github.com
 | `mcp-server/` | MCP tools + WebSocket listener; routes commands by `browserId` |
 | `common/` | Shared types, wire format, handshake, extension WebSocket client |
 
-**Two MCP transports:**
-
-| Transport | Entry point | Use with |
-|-----------|-------------|----------|
-| HTTP (Streamable HTTP) | `dist/http-server.js` (:18790) | OpenCode, remote MCP clients |
-| stdio | `dist/server.js` | Claude Desktop, local MCP configs |
+**MCP transport:** Streamable HTTP only, at `dist/http-server.js` (`:18790`). Works with OpenCode, Claude Code, and any MCP client that supports remote/HTTP servers — no stdio process management, no per-client binary.
 
 Port **18789** is the extension WebSocket — **not** MCP. Do not point OpenCode at `:18789`.
 
@@ -207,25 +202,13 @@ Verify connections: `curl http://127.0.0.1:18790/health` → `browsers` array.
 
 ## Installation (other clients)
 
-### Claude Desktop (stdio)
+### Any coding agent / harness (self-configuring prompt)
 
-Build the extension and MCP server, install the Firefox add-on, then add to `claude_desktop_config.json`:
+No manual config file editing is needed for agent harnesses that can read/write their own settings (Claude Code, OpenCode, Cursor, etc.). After `npm run docker:up`, paste a prompt like this into the harness:
 
-```json
-{
-  "mcpServers": {
-    "tail-mcp": {
-      "command": "node",
-      "args": ["/path/to/repo/mcp-server/dist/server.js"],
-      "env": {
-        "EXTENSION_PORT": "18789"
-      }
-    }
-  }
-}
-```
+> Add the MCP server at `http://127.0.0.1:18790/mcp` (Streamable HTTP, no auth) to your MCP configuration under the name `tail-mcp`, then call `list-connected-browsers` to confirm it's reachable.
 
-For Claude Desktop you can also use the upstream [DXT package](https://github.com/eyalzh/browser-control-mcp/releases) with the official AMO extension — that path does not include this fork's extra tools or HTTP server.
+The agent will find its own MCP config location and wire it up. For the exact JSON shape OpenCode expects, see [Configure OpenCode](#4-configure-opencode) above.
 
 ### MCP server without Docker
 
@@ -233,7 +216,6 @@ For Claude Desktop you can also use the upstream [DXT package](https://github.co
 cd mcp-server
 npm run build
 npm start         # HTTP on :18790
-# npm run start:stdio   # stdio for Claude Desktop
 ```
 
 ### Manual Docker run
@@ -270,8 +252,7 @@ cd firefox-extension && npm run pack-xpi   # also creates ../tail-mcp-firefox-so
 cd firefox-extension && npm test
 
 # MCP server
-cd mcp-server && npm start          # HTTP (default)
-cd mcp-server && npm run start:stdio  # stdio
+cd mcp-server && npm start          # HTTP on :18790
 
 # Docker
 npm run docker:up
