@@ -1,6 +1,6 @@
 {
   "name": "chrome-extension",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "private": true,
   "scripts": {
     "build": "python3 generate-icons.py && esbuild background.ts --bundle --outfile=dist/background.js --format=iife --platform=browser && esbuild offscreen.ts --bundle --outfile=dist/offscreen.js --format=iife --platform=browser && esbuild options.ts --bundle --outfile=dist/options.js --format=iife --platform=browser",
