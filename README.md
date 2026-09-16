@@ -2,6 +2,8 @@
 
 An MCP server paired with a browser extension (Firefox or Chrome) that lets AI assistants work with your browser locally.
 
+**Why not just use a browser-automation MCP (Playwright, Puppeteer, CDP-driven)?** Those drive a separate, automated browser instance — sites that fingerprint and block bot-controlled browsers (Cloudflare, DataDome, PerimeterX, and most login-walled or anti-scraping pages) detect and block it. Tail MCP is different: it's a real extension running inside **your own, already-logged-in browser**. To the website, the traffic looks exactly like you clicking around — because it is. No `navigator.webdriver` flag, no headless fingerprint, no separate automation profile to re-authenticate. This is the main reason to prefer it over automation-framework MCP servers for anything behind a login or bot-detection wall.
+
 Independent project derived from [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) — **not affiliated** with the [official AMO add-on](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/). Own extension IDs, HTTP transport for [OpenCode](https://opencode.ai), Docker deployment, and additional page-inspection/manipulation tools (screenshot, scroll-to-element, viewport resize).
 
 ## Releases
@@ -169,15 +171,17 @@ Restart OpenCode. One MCP URL: `http://127.0.0.1:18790/mcp`. Call `list-connecte
 
 ## Desktop app (no Docker, no terminal)
 
-For people who just want to run the server without touching Docker, npm, or a terminal: a tray/menu-bar app that bundles the whole MCP server into a single native binary.
+For people who just want to run the server without touching Docker, npm, or a terminal: a tray/menu-bar app that bundles the whole MCP server into a single native binary. Tray-only — it never opens a window and never appears in the Dock/taskbar.
 
 1. Download the build for your OS from the [latest release](../../releases/latest):
-   - **macOS** — `Tail MCP_<version>_aarch64.dmg` (Apple Silicon) or `..._x64.dmg` (Intel)
+   - **macOS** — `Tail MCP_<version>_aarch64.dmg` (Apple Silicon only; Intel Macs build from source)
    - **Windows** — `Tail MCP_<version>_x64-setup.exe`
    - **Linux** — `.AppImage` or `.deb` (community-supported, less tested — please file a bug if something breaks)
 2. Install and launch it. A tray/menu-bar icon appears and starts the server automatically (WebSocket on `18789`, MCP HTTP on `18790` — same defaults as the Docker setup).
 3. Install a browser extension as in step 2 above and point it at `ws://127.0.0.1:18789`.
 4. Right-click the tray icon for status, the list of connected browsers, start/stop, "Launch at startup", log/config file access, and quit. Config (`ws_port`/`http_port`/`secret`) is a plain JSON file — "Reveal config file" opens it; restart the app after editing it.
+
+**Works with any MCP-capable harness**, not just OpenCode — Claude Desktop, Claude Code, Cursor, or anything else that can add a remote/Streamable-HTTP MCP server. The desktop app doesn't care who connects; point any harness at `http://127.0.0.1:18790/mcp` (see [Configure OpenCode](#4-configure-opencode) for the JSON shape, or use the [self-configuring prompt](#any-coding-agent--harness-self-configuring-prompt) so the harness wires itself up). One running desktop app can serve multiple harnesses on the same machine simultaneously — they all share the same browser connections.
 
 **These builds are unsigned** (no Apple/Windows developer certificate). Your OS will warn about an "unidentified developer" / unrecognized app on first launch — this is expected, not a sign of tampering:
 - **macOS**: right-click the app → **Open** → **Open** again in the dialog (only needed once). Opening normally via double-click will refuse to launch.
