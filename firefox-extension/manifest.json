@@ -4,6 +4,21 @@
     "version": "2.0.12",
     "description": "Local MCP server control for Firefox. Open extension options after install for setup steps.",
     "homepage_url": "https://github.com/rtf6x/tail-browser-mcp",
+    "icons": {
+        "16": "assets/icons/connected-16.png",
+        "32": "assets/icons/connected-32.png",
+        "48": "assets/icons/connected-48.png",
+        "128": "assets/icons/connected-128.png"
+    },
+    "browser_action": {
+        "default_area": "navbar",
+        "default_icon": {
+            "16": "assets/icons/disconnected-16.png",
+            "32": "assets/icons/disconnected-32.png",
+            "48": "assets/icons/disconnected-48.png"
+        },
+        "default_title": "Tail MCP — MCP server offline"
+    },
     "browser_specific_settings": {
         "gecko": {
             "id": "tail-mcp@rtf6x.local",

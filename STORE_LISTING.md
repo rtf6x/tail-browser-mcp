@@ -12,6 +12,8 @@ What the AMO listing actually shows (checked 2026-09-19, v2.0.10) differs from t
 
 Re-check the live listing before editing it; do not assume the text below is what shipped. The draft copy below was rewritten to name harnesses generically (Claude Code, Claude Desktop, OpenCode, omp, any MCP client) — the live AMO listing still carries the older Claude/OpenCode-only wording until it is re-published.
 
+To replace the AMO **Summary** and **Description**, paste the copy in the "Firefox (AMO)" section below into Developer Hub → *Edit Product Page*. No new version upload is needed: the product page text is independent of the signed XPI, and the summary currently shown is just `manifest.json`'s `description` pulled in at submission time.
+
 ## Chrome Web Store
 
 **Short description** (132 char max — 128 used):
@@ -57,14 +59,51 @@ Open source, MIT licensed: github.com/rtf6x/tail-browser-mcp
 - `offscreen` — maintain a persistent WebSocket connection from a Manifest V3 service worker
 - `debugger` — used only by the optional, off-by-default viewport-resize tool to emulate device dimensions via Chrome DevTools Protocol; not used by any other tool
 
-## Firefox (AMO) — published as [tail-mcp](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/) (v2.0.10)
+## Firefox (AMO) — published as [tail-mcp](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/) (v2.0.10; copy below written, not yet pasted)
 
-**Summary** (250 char max — used ~200):
+**Summary** (250 char max — 225 used):
 ```
-Tail MCP lets an AI assistant (Claude, Claude Code, OpenCode, omp, or any MCP client) control this browser through a local MCP server you run yourself: tabs, history, and — with your per-domain consent — reading, scripting, and screenshotting pages.
+Drive Firefox from your AI coding agent (Claude Code, Claude Desktop, OpenCode, any MCP client) through a local MCP server you run yourself: tabs, history, and — with per-domain consent — page reading, scripting, screenshots.
 ```
 
-**Description:** reuse the Chrome Web Store "Detailed description" above verbatim (AMO has no separate short/long split requirement beyond the summary field).
+**Description** (Markdown is supported in this field; `##` headings, lists, bold, links and code spans render):
+
+```
+Tail MCP connects an AI assistant running on your own machine — Claude Code, Claude Desktop, OpenCode, or any MCP client — to this browser, through a local MCP (Model Context Protocol) server that you run yourself. No cloud service, no account: the extension talks only to a WebSocket server on 127.0.0.1.
+
+**Why not a Playwright or Puppeteer MCP?** Those drive a separate, automated browser. Sites that fingerprint bot-controlled browsers — Cloudflare, DataDome, PerimeterX, and most login-walled or anti-scraping pages — detect and block it. Tail MCP is a real extension inside your own, already logged-in Firefox, so to the website the traffic looks exactly like you clicking around. It is: no `navigator.webdriver` flag, no headless fingerprint, no second automation profile to authenticate again.
+
+## What the assistant can do
+
+- **Tabs** — list, open, close, reorder and group.
+- **History** — search your recent browsing history.
+- **Pages**, on the domains you approve — read text and links, find and highlight text, scroll an element into view, query the DOM, run JavaScript, read console output, take screenshots, and resize the viewport to check responsive and mobile layouts.
+- **One server, many browsers** — every install registers with its own browser ID, so one server can drive Firefox and Chrome side by side.
+
+## Safe by default
+
+- Page access is granted per domain, in the extension's Options page — nothing is readable or scriptable until you approve that domain.
+- Every tool has its own on/off switch.
+- A local audit log records every command that ran.
+- No analytics, no telemetry, no third-party SDKs. The extension declares no data collection; settings and the audit log stay in your browser profile.
+
+## The toolbar button shows where you stand
+
+The fox-tail icon reports the connection to your server: grey when the server is offline, amber while connecting, orange once connected. Hover it for the exact state; clicking it opens Options. If Firefox files the button under the Extensions (puzzle) icon, right-click it and pin it to the toolbar.
+
+## Setup
+
+1. Install this extension.
+2. Start the server on your machine — the desktop tray app from this project's releases, `docker compose up -d --build`, or `npm start` from a checkout.
+3. Open Options (click the toolbar icon) and set a Browser ID plus the server's WebSocket URL, `ws://127.0.0.1:18789` by default.
+4. Point your MCP client at the server's Streamable HTTP endpoint, `http://127.0.0.1:18790/mcp`.
+
+Requires Firefox 140 or newer. Port 18789 is the extension WebSocket, 18790 is MCP.
+
+Open source under the MIT license — source and full setup instructions: https://github.com/rtf6x/tail-browser-mcp
+
+Tail MCP is an independent project derived from eyalzh/browser-control-mcp, and is not affiliated with the similarly named Browser Control MCP add-on.
+```
 
 **Tags:** mcp, ai, automation, developer-tools, claude, agent
 
@@ -75,4 +114,4 @@ https://raw.githubusercontent.com/rtf6x/tail-browser-mcp/main/PRIVACY_POLICY.md
 
 ## Icons
 
-Existing `generate-icons.py` output in `chrome-extension/assets/icons/` already produces 16/32/48/128px PNGs per connection state — sufficient for both stores' icon requirements (Chrome needs 128×128 for the store listing itself; reuse or upscale the connected-state icon for that one asset).
+`npm run icons` (`tools/generate-icons.py`) writes 16/32/48/128px PNGs per connection state into `chrome-extension/assets/icons/` and `firefox-extension/assets/icons/` — sufficient for both stores' icon requirements (Chrome needs 128×128 for the store listing itself; reuse or upscale the connected-state icon for that one asset). Both extensions ship the generated PNGs from git; the generator needs Pillow and `rsvg-convert` and is not part of any build.

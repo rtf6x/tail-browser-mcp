@@ -1,11 +1,16 @@
 import { createWebsocketClient } from "./client";
 import { MessageHandler } from "./message-handler";
 import { getConfig } from "./extension-config";
+import { updateConnectionIcon } from "./connection-icon";
 
 browser.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     void browser.runtime.openOptionsPage();
   }
+});
+
+browser.browserAction.onClicked.addListener(() => {
+  void browser.runtime.openOptionsPage();
 });
 
 function initClient(
@@ -15,6 +20,10 @@ function initClient(
 ) {
   const wsClient = createWebsocketClient(wsUrl, browserId, "", label, "firefox");
   const messageHandler = new MessageHandler(wsClient);
+
+  wsClient.addStatusListener((status) => {
+    void updateConnectionIcon(status);
+  });
 
   wsClient.connect();
 

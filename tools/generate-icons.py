@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Generate toolbar icons for the Chrome extension.
+"""Generate toolbar icons for the Chrome and Firefox extensions.
 
 Draws the Tail MCP fox tail (tail-shape.svg) as a solid silhouette, one set per
 connection state: body in the state colour, tip in a lighter tint of it.
-Needs `rsvg-convert` (brew install librsvg) and Pillow.
+
+Run manually (`npm run icons`); the PNGs are committed to both extension
+directories, and no build step regenerates them. Needs `rsvg-convert`
+(brew install librsvg) and Pillow.
 """
 import os
 import subprocess
@@ -11,8 +14,12 @@ import tempfile
 
 from PIL import Image, ImageDraw, ImageFilter
 
-HERE = os.path.dirname(__file__)
-ROOT = os.path.join(HERE, "assets", "icons")
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(HERE)
+ROOTS = (
+    os.path.join(REPO, "chrome-extension", "assets", "icons"),
+    os.path.join(REPO, "firefox-extension", "assets", "icons"),
+)
 SHAPE = os.path.join(HERE, "tail-shape.svg")
 
 # (body, tip)
@@ -69,12 +76,13 @@ def render(mask: Image.Image, size: int, body, tip) -> Image.Image:
 
 
 def main() -> None:
-    os.makedirs(ROOT, exist_ok=True)
     mask = silhouette()
-    for name, (body, tip) in COLORS.items():
-        for size in SIZES:
-            render(mask, size, body, tip).save(os.path.join(ROOT, f"{name}-{size}.png"))
-    print(f"Wrote icons to {ROOT}")
+    for root in ROOTS:
+        os.makedirs(root, exist_ok=True)
+        for name, (body, tip) in COLORS.items():
+            for size in SIZES:
+                render(mask, size, body, tip).save(os.path.join(root, f"{name}-{size}.png"))
+        print(f"Wrote icons to {os.path.relpath(root, REPO)}")
 
 
 if __name__ == "__main__":

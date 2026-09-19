@@ -5,6 +5,7 @@
   "scripts": {
     "postinstall": "npm install --prefix common && npm install --prefix mcp-server && npm install --prefix firefox-extension && npm install --prefix chrome-extension && npm install --prefix mcpb",
     "build": "npm run build --prefix common && nx run-many --target=build --all --parallel && npm run build --prefix chrome-extension",
+    "icons": "python3 tools/generate-icons.py",
     "pack:extensions": "npm run pack --prefix firefox-extension && npm run pack --prefix chrome-extension",
     "pack:mcpb": "npm run pack --prefix mcpb",
     "docker:up": "docker compose up -d --build",

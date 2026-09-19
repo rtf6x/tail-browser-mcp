@@ -497,6 +497,7 @@ tail-browser-mcp/
 ├── chrome-extension/
 ├── mcp-server/
 ├── mcpb/                   # Claude Desktop MCP bundle (stdio → HTTP bridge)
+├── tools/                  # Icon generator (`npm run icons`), dev-only
 ├── docker-compose.yml      # single MCP server (18789/18790)
 ├── Dockerfile
 └── .env.example            # optional settings (empty by default)
