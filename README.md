@@ -368,7 +368,7 @@ For people who just want to run the server without touching Docker, npm, or a te
 <details>
 <summary>Maintainers: the macOS signing secrets</summary>
 
-The bundle build (`desktop-release.yml`) reads these repository secrets. Nothing is required: with no certificate the build signs ad-hoc and says so. Two combinations are meaningful, and a certificate without notarization credentials fails on purpose — signed but not notarized still trips Gatekeeper, so that half-configured pair stops the run instead of shipping.
+The release build (`.github/workflows/release.yml`) reads these repository secrets. Nothing is required: with no certificate the build signs ad-hoc and says so. Two combinations are meaningful, and a certificate without notarization credentials fails on purpose — signed but not notarized still trips Gatekeeper, so that half-configured pair stops the run instead of shipping.
 
 **1. The certificate** — `APPLE_CERTIFICATE` is the base64 of the exported *Developer ID Application* `.p12` (`openssl base64 -A -in cert.p12 -out cert-base64.txt`), `APPLE_CERTIFICATE_PASSWORD` the password you set when exporting it. Export it so that the system Security framework can import it — either `security export -t identities -f pkcs12` from the keychain that holds the certificate, or `/usr/bin/openssl pkcs12 -export` (the Apple-provided LibreSSL, whose legacy cipher is what `security import` expects). The workflow reads the signing identity out of that `.p12` and passes it as `APPLE_SIGNING_IDENTITY`, so the secret list stays at five entries.
 
@@ -403,7 +403,7 @@ With no certificate the workflow sets `APPLE_SIGNING_IDENTITY=-`, an ad-hoc sign
    gh secret set APPLE_PASSWORD    # the app-specific password
    gh secret set APPLE_TEAM_ID
    ```
-4. **Build**: `gh workflow run desktop-release.yml -f tag=v2.0.19`. Notarization happens inside `tauri build`; the verify step then requires `xcrun stapler validate` to pass for the `.app` and for the copy inside the `.dmg`, which is the observable proof that Apple issued a ticket. A notarization round trip adds a few minutes to the run.
+4. **Release**: `gh workflow run release.yml`. One manual run bumps the patch version, tags the tip of `main`, attaches the extension packages and the desktop bundles for all three OSes, and publishes the release — no push ever creates one. Notarization happens inside `tauri build`; the verify step then requires `xcrun stapler validate` to pass for the `.app` and for the copy inside the `.dmg`, which is the observable proof that Apple issued a ticket. The release stays a draft until every artifact is uploaded, so a failed build leaves a draft (say why, fix, rerun — the same tag is reused, the version does not move again) instead of a half-empty release. A notarization round trip adds a few minutes to the run.
 </details>
 
 If a coding agent/harness has already cloned this repo and set up the extension, it can equally well `npm run docker:up` (see Quick start above) instead of the desktop app — both expose the identical MCP server on the same ports.

@@ -1,19 +1,115 @@
-name: Build and Release extensions
+name: Release
 
+# Manual only, by design. One button produces a complete release — the Chrome
+# zip, the Firefox XPI and its AMO source archive, the Claude Desktop `.mcpb`
+# and the signed desktop builds for macOS/Windows/Linux — from the tip of main.
+# Nothing here runs on a push, so an ordinary commit cannot start a 3-OS build
+# or publish a release:
+#
+#   gh workflow run release.yml
+#
+# The version is deliberately not an input. The run bumps the patch version
+# itself, commits that bump as the new tip of main and tags that same commit, so
+# the tag always sits on the latest main commit and every manifest carries the
+# version the artifacts are named after. Re-running a failed release finds the
+# tag already on main and reuses it instead of bumping a second time.
+#
+# The release stays a draft until every artifact is attached; the final job
+# publishes it and marks it latest, so a half-built release is never visible.
+#
+# macOS signing: with no signing identity Tauri skips signing entirely, and
+# macOS then refuses to open the app ("Tail MCP.app is damaged, move it to the
+# Trash") because a bundle signature that declares resources without shipping
+# them is invalid. The job therefore always sets APPLE_SIGNING_IDENTITY —
+# either the Developer ID from the certificate secret, or "-" for an ad-hoc
+# signature — and verifies the shipped bundle before uploading it.
+#
+# Repository secrets, all optional, each one degrades gracefully:
+#   APPLE_CERTIFICATE           base64 of the exported Developer ID .p12
+#   APPLE_CERTIFICATE_PASSWORD  password chosen when exporting that .p12
+# Notarization takes either trio; Tauri reads the Apple ID one first:
+#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID             Apple ID + app-specific password
+#   APPLE_API_KEY, APPLE_API_ISSUER, APPLE_API_KEY_P8   App Store Connect API key
+# No certificate        -> ad-hoc signature (app opens, user sees an
+#                          "unidentified developer" prompt)
+# No notarization creds -> with a certificate the verify step fails on purpose,
+#                          because a signed-but-not-notarized build still greets
+#                          users with a warning
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
-jobs:
-  build-and-upload:
-    runs-on: ubuntu-latest
+# Two releases must never run at once: they would race on the version bump and
+# the tag. A second dispatch waits instead of cancelling the first.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
+env:
+  # Pinned: a newer CLI must not silently change how the bundles are produced.
+  TAURI_CLI_VERSION: 2.11.4
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
-    - name: Checkout code
+    - name: Checkout the tip of main
       uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+        token: ${{ secrets.RELEASE_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Bump the version, tag the tip of main and open a draft release
+      id: tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      run: |
+        set -euo pipefail
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git fetch --tags --force origin
+
+        # A tag already sitting on the tip of main means this commit was prepared
+        # by an earlier run of this workflow, so reuse it: a retry after a failed
+        # build must not move the version again.
+        TAG=$(git tag --points-at HEAD --list 'v*' | sort -V | tail -1)
+        if [ -n "$TAG" ]; then
+          echo "main is already tagged $TAG - reusing it"
+        else
+          TAG="v$(node scripts/bump-version.mjs)"
+          git add -A
+          git commit -m "chore: release $TAG [skip ci]"
+          git tag "$TAG"
+          git push origin HEAD:main
+          git push origin "$TAG"
+          echo "tagged $(git rev-parse --short HEAD) as $TAG"
+        fi
+        echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+        # Draft: users see nothing until every job below has uploaded its files.
+        if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "$TAG" --generate-notes
+        fi
+
+  extensions:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the release tag
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.prepare.outputs.tag }}
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -33,21 +129,243 @@ jobs:
     - name: Pack MCPB bundle (Claude Desktop)
       run: npm run pack:mcpb
 
-    - name: Rename extension packages with version
+    - name: Rename extension packages with the release tag
       run: |
-        mv tail-mcp-chrome.zip tail-mcp-chrome-${{ github.event.release.tag_name }}.zip
-        mv tail-mcp-dev.xpi tail-mcp-firefox-${{ github.event.release.tag_name }}.xpi
-        mv tail-mcp-firefox-source.zip tail-mcp-firefox-source-${{ github.event.release.tag_name }}.zip
-        mv tail-mcp-desktop-*.mcpb tail-mcp-desktop-${{ github.event.release.tag_name }}.mcpb
+        mv tail-mcp-chrome.zip tail-mcp-chrome-${{ needs.prepare.outputs.tag }}.zip
+        mv tail-mcp-dev.xpi tail-mcp-firefox-${{ needs.prepare.outputs.tag }}.xpi
+        mv tail-mcp-firefox-source.zip tail-mcp-firefox-source-${{ needs.prepare.outputs.tag }}.zip
+        mv tail-mcp-desktop-*.mcpb tail-mcp-desktop-${{ needs.prepare.outputs.tag }}.mcpb
 
-    - name: Upload packages to release
+    - name: Upload packages to the draft release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload ${{ github.event.release.tag_name }} \
-          ./tail-mcp-chrome-${{ github.event.release.tag_name }}.zip \
-          ./tail-mcp-firefox-${{ github.event.release.tag_name }}.xpi \
-          ./tail-mcp-firefox-source-${{ github.event.release.tag_name }}.zip \
-          ./tail-mcp-desktop-${{ github.event.release.tag_name }}.mcpb \
+        gh release upload ${{ needs.prepare.outputs.tag }} \
+          ./tail-mcp-chrome-${{ needs.prepare.outputs.tag }}.zip \
+          ./tail-mcp-firefox-${{ needs.prepare.outputs.tag }}.xpi \
+          ./tail-mcp-firefox-source-${{ needs.prepare.outputs.tag }}.zip \
+          ./tail-mcp-desktop-${{ needs.prepare.outputs.tag }}.mcpb \
           --clobber
 
+  desktop:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout the release tag
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.prepare.outputs.tag }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: 'npm'
+
+    - name: Install Linux Tauri build dependencies
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev patchelf build-essential
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Rust build
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: desktop-app/src-tauri
+
+    - name: Install common dependencies
+      working-directory: common
+      run: npm install
+
+    - name: Install mcp-server dependencies
+      working-directory: mcp-server
+      run: npm install
+
+    - name: Build common
+      working-directory: common
+      run: npm run build
+
+    - name: Build sidecar for ${{ matrix.target }}
+      working-directory: mcp-server
+      run: node scripts/build-sidecar.mjs ${{ matrix.target }} ../desktop-app/src-tauri/binaries
+
+    - name: Configure macOS code signing
+      if: matrix.os == 'macos-latest'
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      run: |
+        set -euo pipefail
+        # GitHub defines an environment variable for every secret referenced in
+        # `env`, empty when the secret is not configured, and Tauri treats an
+        # empty APPLE_CERTIFICATE as a certificate it must import. So export only
+        # what actually exists, and let the build step inherit from here.
+        SIGNED=0
+        if [ -z "${APPLE_CERTIFICATE:-}" ]; then
+          echo "::warning::APPLE_CERTIFICATE is not set - signing ad-hoc. The app opens, but users get an unidentified-developer prompt."
+          echo "SIGNED_WITH_DEVELOPER_ID=0" >> "$GITHUB_ENV"
+          echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+        else
+          SIGNED=1
+          echo "SIGNED_WITH_DEVELOPER_ID=1" >> "$GITHUB_ENV"
+          {
+            echo "APPLE_CERTIFICATE<<TAIL_MCP_CERT_EOF"
+            echo "$APPLE_CERTIFICATE"
+            echo "TAIL_MCP_CERT_EOF"
+            echo "APPLE_CERTIFICATE_PASSWORD<<TAIL_MCP_PW_EOF"
+            echo "$APPLE_CERTIFICATE_PASSWORD"
+            echo "TAIL_MCP_PW_EOF"
+          } >> "$GITHUB_ENV"
+          # Tauri only signs with an explicit identity when APPLE_SIGNING_IDENTITY
+          # is set, so pin it to the name inside the certificate instead of
+          # relying on detection. This is the same name `security find-identity`
+          # reports, which is what codesign matches against.
+          SIGNING_IDENTITY=$(printf '%s' "$APPLE_CERTIFICATE" | openssl base64 -d -A \
+            | openssl pkcs12 -nokeys -clcerts -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" 2>/dev/null \
+            | openssl x509 -noout -subject 2>/dev/null | sed -n 's/.*CN *= *//p' | sed 's|/.*||' | sed 's/,.*//')
+          if [ -z "$SIGNING_IDENTITY" ]; then
+            echo "could not read a signing identity out of APPLE_CERTIFICATE" >&2
+            exit 1
+          fi
+          echo "APPLE_SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
+          echo "signing identity: $SIGNING_IDENTITY"
+        fi
+        if [ -n "${APPLE_API_KEY_P8:-}" ]; then
+          mkdir -p private_keys
+          printf '%s' "$APPLE_API_KEY_P8" > "private_keys/AuthKey_${APPLE_API_KEY}.p8"
+          {
+            echo "APPLE_API_KEY=${APPLE_API_KEY}"
+            echo "APPLE_API_ISSUER=${APPLE_API_ISSUER}"
+            echo "APPLE_API_KEY_PATH=${GITHUB_WORKSPACE}/private_keys/AuthKey_${APPLE_API_KEY}.p8"
+          } >> "$GITHUB_ENV"
+          NOTARIZED=1
+          echo "notarizing with App Store Connect key ${APPLE_API_KEY}"
+        elif [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ]; then
+          # The other trio Tauri accepts: an Apple ID with an app-specific
+          # password. It cannot work without the team ID, because nothing else
+          # tells notarytool which team the Apple ID should act for.
+          if [ -z "${APPLE_TEAM_ID:-}" ]; then
+            echo "APPLE_ID and APPLE_PASSWORD are set but APPLE_TEAM_ID is not - Tauri aborts notarization without it." >&2
+            exit 1
+          fi
+          {
+            echo "APPLE_ID=${APPLE_ID}"
+            echo "APPLE_PASSWORD<<TAIL_MCP_APPLE_PW_EOF"
+            echo "$APPLE_PASSWORD"
+            echo "TAIL_MCP_APPLE_PW_EOF"
+            echo "APPLE_TEAM_ID=${APPLE_TEAM_ID}"
+          } >> "$GITHUB_ENV"
+          NOTARIZED=1
+          echo "notarizing as ${APPLE_ID} with an app-specific password"
+        else
+          NOTARIZED=0
+        fi
+        echo "NOTARIZED=$NOTARIZED" >> "$GITHUB_ENV"
+        if [ "$NOTARIZED" = "0" ]; then
+          if [ "$SIGNED" = "1" ]; then
+            echo "APPLE_CERTIFICATE is set but no notarization credentials are: signed-but-not-notarized still trips Gatekeeper, so this half-configured pair fails here instead of shipping. Set APPLE_API_KEY + APPLE_API_ISSUER + APPLE_API_KEY_P8, or APPLE_ID + APPLE_PASSWORD + APPLE_TEAM_ID." >&2
+            exit 1
+          fi
+          echo "::warning::no notarization credentials - Tauri will skip notarization."
+        fi
+
+    - name: Build Tauri app
+      working-directory: desktop-app/src-tauri
+      # Signing variables arrive through GITHUB_ENV from the step above: Tauri
+      # reads APPLE_SIGNING_IDENTITY, APPLE_CERTIFICATE and APPLE_API_* from the
+      # environment, and an empty value is worse than an absent one. The CLI
+      # version goes in as a GitHub expression, not `${VAR}`, because the
+      # Windows runner runs this step in PowerShell where that is not a variable.
+      run: npx --yes @tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} build
+
+    - name: Verify the macOS bundle is signed
+      if: matrix.os == 'macos-latest'
+      run: |
+        set -euo pipefail
+        APP=$(find desktop-app/src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)
+        if [ -z "$APP" ]; then echo "no .app bundle was produced" >&2; exit 1; fi
+
+        # This is the check that was missing: an unsigned bundle is exactly what
+        # makes macOS report the app as damaged, so it has to be a hard failure.
+        codesign --verify --deep --strict --verbose=2 "$APP"
+        codesign -dv --verbose=2 "$APP" 2>&1 | grep -E '^(Authority|TeamIdentifier|Signature)' || true
+        syspolicy_check distribution "$APP" || true
+
+        # The sidecar is Node. Under the hardened runtime without its JIT
+        # entitlements it starts, logs nothing and never binds a port, so assert
+        # the entitlements reached the binary Tauri signs.
+        codesign -d --entitlements :- "$APP/Contents/MacOS/mcp-server" 2>/dev/null | grep -q 'allow-jit' \
+          || { echo "the sidecar has no JIT entitlement - it will hang instead of listening" >&2; exit 1; }
+
+        if [ "${SIGNED_WITH_DEVELOPER_ID:-0}" = "1" ]; then
+          codesign -dv --verbose=2 "$APP" 2>&1 | grep -q '^Authority=Developer ID Application' \
+            || { echo "APPLE_CERTIFICATE did not yield a Developer ID Application signature" >&2; exit 1; }
+          APP_TEAM=$(codesign -dv --verbose=2 "$APP" 2>&1 | sed -n 's/^TeamIdentifier=//p')
+          SIDECAR_TEAM=$(codesign -dv --verbose=2 "$APP/Contents/MacOS/mcp-server" 2>&1 | sed -n 's/^TeamIdentifier=//p')
+          if [ -z "$APP_TEAM" ] || [ "$APP_TEAM" != "$SIDECAR_TEAM" ]; then
+            echo "bundle and sidecar are not signed by the same team ('$APP_TEAM' vs '$SIDECAR_TEAM')" >&2
+            exit 1
+          fi
+        fi
+
+        if [ "${NOTARIZED:-0}" = "1" ]; then
+          xcrun stapler validate "$APP"
+        fi
+
+        # The uploaded artifact is the dmg, so verify the copy users actually get.
+        DMG=$(find desktop-app/src-tauri/target/release/bundle/dmg -name '*.dmg' -print -quit)
+        if [ -z "$DMG" ]; then echo "no .dmg was produced" >&2; exit 1; fi
+        MOUNT=$(mktemp -d)
+        hdiutil attach "$DMG" -mountpoint "$MOUNT" -nobrowse -quiet
+        INAPP=$(find "$MOUNT" -maxdepth 1 -name '*.app' -print -quit)
+        codesign --verify --deep --strict --verbose=2 "$INAPP"
+        if [ "${NOTARIZED:-0}" = "1" ]; then xcrun stapler validate "$INAPP"; fi
+        hdiutil detach "$MOUNT" -quiet
+
+    - name: Upload desktop bundles to the draft release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+      run: |
+        assets=()
+        while IFS= read -r -d '' f; do
+          assets+=("$f")
+        done < <(find desktop-app/src-tauri/target/release/bundle \
+          -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' \) -print0)
+        if [ "${#assets[@]}" -eq 0 ]; then
+          echo "No desktop bundle artifacts found for ${{ matrix.target }}" >&2
+          exit 1
+        fi
+        gh release upload ${{ needs.prepare.outputs.tag }} "${assets[@]}" --clobber
+
+  publish:
+    needs: [extensions, desktop]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Publish the release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release edit ${{ needs.prepare.outputs.tag }} --repo "$GITHUB_REPOSITORY" \
+          --draft=false --latest

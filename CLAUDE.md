@@ -46,9 +46,10 @@ cd mcp-server && node scripts/build-sidecar.mjs <rust-target-triple> ../desktop-
 cd desktop-app/src-tauri && npx @tauri-apps/cli build   # or `dev` while iterating
 ```
 
-CI builds desktop bundles (macOS/Windows/Linux) only on manual trigger,
-not on every auto-patch release — `gh workflow run desktop-release.yml -f tag=v2.0.7`
-against an existing release tag.
+Releases are manual only: `gh workflow run release.yml` bumps the patch version, commits
+and tags the tip of `main`, builds the extension packages and the signed desktop bundles
+for macOS/Windows/Linux in parallel, and publishes the release (it stays a draft until
+every artifact is attached). No release is created by a push — a push runs only `Build`.
 
 ### MCP bundle (Claude Desktop)
 ```bash
