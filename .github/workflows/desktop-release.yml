@@ -139,8 +139,10 @@ jobs:
       working-directory: desktop-app/src-tauri
       # Signing variables arrive through GITHUB_ENV from the step above: Tauri
       # reads APPLE_SIGNING_IDENTITY, APPLE_CERTIFICATE and APPLE_API_* from the
-      # environment, and an empty value is worse than an absent one.
-      run: npx --yes @tauri-apps/cli@${TAURI_CLI_VERSION} build
+      # environment, and an empty value is worse than an absent one. The CLI
+      # version goes in as a GitHub expression, not `${VAR}`, because the
+      # Windows runner runs this step in PowerShell where that is not a variable.
+      run: npx --yes @tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} build
 
     - name: Verify the macOS bundle is signed
       if: matrix.os == 'macos-latest'
