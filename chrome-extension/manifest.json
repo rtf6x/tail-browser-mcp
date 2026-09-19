@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tail MCP",
-  "version": "2.0.21",
+  "version": "2.0.22",
   "description": "Drive this browser from your AI assistant via a local MCP server: tabs, history, pages, screenshots. Open Options to connect.",
   "homepage_url": "https://github.com/rtf6x/tail-browser-mcp",
   "permissions": ["tabs", "tabGroups", "history", "storage", "scripting", "alarms", "offscreen", "debugger"],
