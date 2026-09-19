@@ -108,11 +108,13 @@ jobs:
         # `env`, empty when the secret is not configured, and Tauri treats an
         # empty APPLE_CERTIFICATE as a certificate it must import. So export only
         # what actually exists, and let the build step inherit from here.
+        SIGNED=0
         if [ -z "${APPLE_CERTIFICATE:-}" ]; then
           echo "::warning::APPLE_CERTIFICATE is not set - signing ad-hoc. The app opens, but users get an unidentified-developer prompt."
           echo "SIGNED_WITH_DEVELOPER_ID=0" >> "$GITHUB_ENV"
           echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
         else
+          SIGNED=1
           echo "SIGNED_WITH_DEVELOPER_ID=1" >> "$GITHUB_ENV"
           {
             echo "APPLE_CERTIFICATE<<TAIL_MCP_CERT_EOF"
@@ -122,6 +124,19 @@ jobs:
             echo "$APPLE_CERTIFICATE_PASSWORD"
             echo "TAIL_MCP_PW_EOF"
           } >> "$GITHUB_ENV"
+          # Tauri only signs with an explicit identity when APPLE_SIGNING_IDENTITY
+          # is set, so pin it to the name inside the certificate instead of
+          # relying on detection. This is the same name `security find-identity`
+          # reports, which is what codesign matches against.
+          SIGNING_IDENTITY=$(printf '%s' "$APPLE_CERTIFICATE" | openssl base64 -d -A \
+            | openssl pkcs12 -nokeys -clcerts -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" 2>/dev/null \
+            | openssl x509 -noout -subject 2>/dev/null | sed -n 's/.*CN *= *//p' | sed 's|/.*||' | sed 's/,.*//')
+          if [ -z "$SIGNING_IDENTITY" ]; then
+            echo "could not read a signing identity out of APPLE_CERTIFICATE" >&2
+            exit 1
+          fi
+          echo "APPLE_SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
+          echo "signing identity: $SIGNING_IDENTITY"
         fi
         if [ -n "${APPLE_API_KEY_P8:-}" ]; then
           mkdir -p private_keys
@@ -130,8 +145,15 @@ jobs:
             echo "APPLE_API_KEY=${APPLE_API_KEY}"
             echo "APPLE_API_ISSUER=${APPLE_API_ISSUER}"
             echo "APPLE_API_KEY_PATH=${GITHUB_WORKSPACE}/private_keys/AuthKey_${APPLE_API_KEY}.p8"
+            echo "NOTARIZED=1"
           } >> "$GITHUB_ENV"
+          echo "notarizing with API key ${APPLE_API_KEY}"
         else
+          echo "NOTARIZED=0" >> "$GITHUB_ENV"
+          if [ "$SIGNED" = "1" ]; then
+            echo "APPLE_CERTIFICATE is set but APPLE_API_KEY_P8 is not: a Developer ID build that is signed but not notarized still trips Gatekeeper, so this half-configured pair fails here instead of shipping." >&2
+            exit 1
+          fi
           echo "::warning::APPLE_API_KEY_P8 is not set - Tauri will skip notarization."
         fi
 
@@ -157,14 +179,25 @@ jobs:
         codesign -dv --verbose=2 "$APP" 2>&1 | grep -E '^(Authority|TeamIdentifier|Signature)' || true
         syspolicy_check distribution "$APP" || true
 
+        # The sidecar is Node. Under the hardened runtime without its JIT
+        # entitlements it starts, logs nothing and never binds a port, so assert
+        # the entitlements reached the binary Tauri signs.
+        codesign -d --entitlements :- "$APP/Contents/MacOS/mcp-server" 2>/dev/null | grep -q 'allow-jit' \
+          || { echo "the sidecar has no JIT entitlement - it will hang instead of listening" >&2; exit 1; }
+
         if [ "${SIGNED_WITH_DEVELOPER_ID:-0}" = "1" ]; then
-          xcrun stapler validate "$APP"
+          codesign -dv --verbose=2 "$APP" 2>&1 | grep -q '^Authority=Developer ID Application' \
+            || { echo "APPLE_CERTIFICATE did not yield a Developer ID Application signature" >&2; exit 1; }
           APP_TEAM=$(codesign -dv --verbose=2 "$APP" 2>&1 | sed -n 's/^TeamIdentifier=//p')
           SIDECAR_TEAM=$(codesign -dv --verbose=2 "$APP/Contents/MacOS/mcp-server" 2>&1 | sed -n 's/^TeamIdentifier=//p')
           if [ -z "$APP_TEAM" ] || [ "$APP_TEAM" != "$SIDECAR_TEAM" ]; then
             echo "bundle and sidecar are not signed by the same team ('$APP_TEAM' vs '$SIDECAR_TEAM')" >&2
             exit 1
           fi
+        fi
+
+        if [ "${NOTARIZED:-0}" = "1" ]; then
+          xcrun stapler validate "$APP"
         fi
 
         # The uploaded artifact is the dmg, so verify the copy users actually get.
@@ -174,7 +207,7 @@ jobs:
         hdiutil attach "$DMG" -mountpoint "$MOUNT" -nobrowse -quiet
         INAPP=$(find "$MOUNT" -maxdepth 1 -name '*.app' -print -quit)
         codesign --verify --deep --strict --verbose=2 "$INAPP"
-        if [ "${SIGNED_WITH_DEVELOPER_ID:-0}" = "1" ]; then xcrun stapler validate "$INAPP"; fi
+        if [ "${NOTARIZED:-0}" = "1" ]; then xcrun stapler validate "$INAPP"; fi
         hdiutil detach "$MOUNT" -quiet
 
     - name: Upload desktop bundles to release
