@@ -110,6 +110,7 @@ Open source under the MIT license — source, attribution and full setup instruc
 - New toolbar button, placed in the toolbar on install. Its icon reports the state of the link to your local MCP server: grey when the server is offline, amber while connecting, orange once connected. Hover it for the exact state.
 - Clicking the toolbar button opens the add-on's Options page.
 - Options page setup text is now client-agnostic: one endpoint, the same for every MCP client.
+- Reworked the add-on's one-line description, shown in the extensions manager: it now says what the add-on does and that Options is where you connect.
 ```
 
 **Tags:** mcp, ai, automation, developer tools, agent — pick from whatever the form offers.

@@ -12,7 +12,7 @@ Independent project derived from [eyalzh/browser-control-mcp](https://github.com
 
 | Version | Notes |
 |---------|--------|
-| **[v2.0.13](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.13)** (current) | Extension icon set (add-on had no icons at all) and a toolbar button that shows the connection state and opens Options on click; icon generation no longer needs Python on the build runner |
+| **[v2.0.14](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.14)** (current) | Extension icon set (the add-on had no icons at all), a toolbar button that shows the connection state and opens Options on click, and a rewritten one-line description shown in the extensions manager; icon generation no longer needs Python on the build runner |
 | [v2.0.10](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.10) | Fix: WebSocket server now binds `127.0.0.1` (was `localhost`, which resolved IPv6-only on some machines and silently blocked extension connections) |
 | [v2.0.7](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.7) | Desktop tray app (macOS/Windows/Linux) — bundles the MCP server as a single native binary, no Docker/npm/terminal required |
 | [v2.0.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.0) | Rebrand to Tail MCP, own extension IDs, screenshot/scroll/viewport-resize tools |
