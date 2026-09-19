@@ -23,6 +23,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": ["binaries/mcp-server"]
+    "externalBin": ["binaries/mcp-server"],
+    "macOS": {
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist"
+    }
   }
 }

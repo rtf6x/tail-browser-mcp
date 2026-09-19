@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Tauri applies these to every signed target in the bundle, the main
+       binary and the mcp-server sidecar alike. The sidecar embeds Node, and
+       V8 needs to map JIT pages; under the hardened runtime (which macOS
+       requires for notarization) that mapping is denied without these two
+       entitlements, and the sidecar starts but never binds its ports - a
+       silent hang, not a crash. Verified on the shipped binary: without them
+       nothing listens on 18789/18790, with them the servers come up. -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+</dict>
+</plist>

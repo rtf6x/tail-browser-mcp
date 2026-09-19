@@ -4,6 +4,25 @@ name: Build and upload desktop app
 # don't need to run on every auto-patch release. Trigger explicitly when a
 # desktop-app change actually needs new binaries:
 #   gh workflow run desktop-release.yml -f tag=v2.0.7
+#
+# macOS signing: with no signing identity Tauri skips signing entirely, and
+# macOS then refuses to open the app ("Tail MCP.app is damaged, move it to the
+# Trash") because a bundle signature that declares resources without shipping
+# them is invalid. This job therefore always sets APPLE_SIGNING_IDENTITY —
+# either the Developer ID from the certificate secret, or "-" for an ad-hoc
+# signature — and verifies the shipped bundle before uploading it.
+#
+# Repository secrets, all optional, each one degrades gracefully:
+#   APPLE_CERTIFICATE           base64 of the exported Developer ID .p12
+#   APPLE_CERTIFICATE_PASSWORD  password chosen when exporting that .p12
+#   APPLE_API_KEY               App Store Connect API key ID
+#   APPLE_API_ISSUER            App Store Connect API issuer ID
+#   APPLE_API_KEY_P8            contents of the downloaded AuthKey_*.p8
+# No certificate  -> ad-hoc signature (app opens, user sees an "unidentified
+#                    developer" prompt)
+# No API key      -> no notarization (with a certificate: the verify step
+#                    fails, because an un-notarized Developer ID build still
+#                    greets users with a warning)
 on:
   workflow_dispatch:
     inputs:
@@ -13,6 +32,10 @@ on:
 
 permissions:
   contents: write
+
+env:
+  # Pinned: a newer CLI must not silently change how the bundles are produced.
+  TAURI_CLI_VERSION: 2.11.4
 
 jobs:
   build-desktop-app:
@@ -71,9 +94,76 @@ jobs:
       working-directory: mcp-server
       run: node scripts/build-sidecar.mjs ${{ matrix.target }} ../desktop-app/src-tauri/binaries
 
+    - name: Configure macOS code signing
+      if: matrix.os == 'macos-latest'
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+      run: |
+        set -euo pipefail
+        if [ -z "${APPLE_CERTIFICATE:-}" ]; then
+          echo "::warning::APPLE_CERTIFICATE is not set - signing ad-hoc. The app opens, but users get an unidentified-developer prompt."
+          echo "SIGNED_WITH_DEVELOPER_ID=0" >> "$GITHUB_ENV"
+          echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+        else
+          echo "SIGNED_WITH_DEVELOPER_ID=1" >> "$GITHUB_ENV"
+        fi
+        if [ -n "${APPLE_API_KEY_P8:-}" ]; then
+          mkdir -p private_keys
+          printf '%s' "$APPLE_API_KEY_P8" > "private_keys/AuthKey_${APPLE_API_KEY}.p8"
+          {
+            echo "APPLE_API_KEY=${APPLE_API_KEY}"
+            echo "APPLE_API_ISSUER=${APPLE_API_ISSUER}"
+            echo "APPLE_API_KEY_PATH=${GITHUB_WORKSPACE}/private_keys/AuthKey_${APPLE_API_KEY}.p8"
+          } >> "$GITHUB_ENV"
+        else
+          echo "::warning::APPLE_API_KEY_P8 is not set - Tauri will skip notarization."
+        fi
+
     - name: Build Tauri app
       working-directory: desktop-app/src-tauri
-      run: npx --yes @tauri-apps/cli@latest build
+      env:
+        # Tauri imports this certificate into a temporary keychain itself and
+        # reads APPLE_SIGNING_IDENTITY and the APPLE_API_* variables from the
+        # environment set up above.
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      run: npx --yes @tauri-apps/cli@${TAURI_CLI_VERSION} build
+
+    - name: Verify the macOS bundle is signed
+      if: matrix.os == 'macos-latest'
+      run: |
+        set -euo pipefail
+        APP=$(find desktop-app/src-tauri/target/release/bundle/macos -maxdepth 1 -name '*.app' -print -quit)
+        if [ -z "$APP" ]; then echo "no .app bundle was produced" >&2; exit 1; fi
+
+        # This is the check that was missing: an unsigned bundle is exactly what
+        # makes macOS report the app as damaged, so it has to be a hard failure.
+        codesign --verify --deep --strict --verbose=2 "$APP"
+        codesign -dv --verbose=2 "$APP" 2>&1 | grep -E '^(Authority|TeamIdentifier|Signature)' || true
+        syspolicy_check distribution "$APP" || true
+
+        if [ "${SIGNED_WITH_DEVELOPER_ID:-0}" = "1" ]; then
+          xcrun stapler validate "$APP"
+          APP_TEAM=$(codesign -dv --verbose=2 "$APP" 2>&1 | sed -n 's/^TeamIdentifier=//p')
+          SIDECAR_TEAM=$(codesign -dv --verbose=2 "$APP/Contents/MacOS/mcp-server" 2>&1 | sed -n 's/^TeamIdentifier=//p')
+          if [ -z "$APP_TEAM" ] || [ "$APP_TEAM" != "$SIDECAR_TEAM" ]; then
+            echo "bundle and sidecar are not signed by the same team ('$APP_TEAM' vs '$SIDECAR_TEAM')" >&2
+            exit 1
+          fi
+        fi
+
+        # The uploaded artifact is the dmg, so verify the copy users actually get.
+        DMG=$(find desktop-app/src-tauri/target/release/bundle/dmg -name '*.dmg' -print -quit)
+        if [ -z "$DMG" ]; then echo "no .dmg was produced" >&2; exit 1; fi
+        MOUNT=$(mktemp -d)
+        hdiutil attach "$DMG" -mountpoint "$MOUNT" -nobrowse -quiet
+        INAPP=$(find "$MOUNT" -maxdepth 1 -name '*.app' -print -quit)
+        codesign --verify --deep --strict --verbose=2 "$INAPP"
+        if [ "${SIGNED_WITH_DEVELOPER_ID:-0}" = "1" ]; then xcrun stapler validate "$INAPP"; fi
+        hdiutil detach "$MOUNT" -quiet
 
     - name: Upload desktop bundles to release
       env:

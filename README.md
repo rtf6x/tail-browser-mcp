@@ -363,9 +363,23 @@ For people who just want to run the server without touching Docker, npm, or a te
 
 **Works with any MCP-capable harness** — OpenCode, Claude Code, Claude Desktop, omp, Cursor, or anything else that can add a remote/Streamable-HTTP MCP server (Claude Desktop via the stdio bridge in [step 4](#4-point-your-harness-at-the-server)). The desktop app doesn't care who connects; point any harness at `http://127.0.0.1:18790/mcp` — see [step 4](#4-point-your-harness-at-the-server) for ready-made per-harness snippets, or use the [self-configuring prompt](#any-coding-agent--harness-self-configuring-prompt) so the harness wires itself up. One running desktop app can serve multiple harnesses on the same machine simultaneously — they all share the same browser connections.
 
-**These builds are unsigned** (no Apple/Windows developer certificate). Your OS will warn about an "unidentified developer" / unrecognized app on first launch — this is expected, not a sign of tampering:
-- **macOS**: right-click the app → **Open** → **Open** again in the dialog (only needed once). Opening normally via double-click will refuse to launch.
-- **Windows**: click **More info** on the SmartScreen prompt → **Run anyway**.
+**Signing status.** macOS builds are signed with a Developer ID and notarized by Apple, so they open with a plain double-click and no warning. If a release was built while the signing secrets were unset, the bundle is signed ad-hoc instead and macOS shows an "unidentified developer" prompt — then right-click the app → **Open** → **Open** again in the dialog (needed once). Windows builds are still unsigned: click **More info** on the SmartScreen prompt → **Run anyway**.
+
+<details>
+<summary>Maintainers: the macOS signing secrets</summary>
+
+The bundle build (`desktop-release.yml`) reads these repository secrets. Each one is optional; the workflow degrades instead of failing, except that a certificate without a notarization key fails the verify step on purpose:
+
+| Secret | What it is |
+|---|---|
+| `APPLE_CERTIFICATE` | base64 of the exported *Developer ID Application* `.p12` — `openssl base64 -A -in cert.p12 -out cert-base64.txt` |
+| `APPLE_CERTIFICATE_PASSWORD` | the password you set when exporting that `.p12` |
+| `APPLE_API_KEY` | App Store Connect API key ID |
+| `APPLE_API_ISSUER` | App Store Connect API issuer ID |
+| `APPLE_API_KEY_P8` | contents of the downloaded `AuthKey_*.p8` |
+
+With no certificate the workflow sets `APPLE_SIGNING_IDENTITY=-`, an ad-hoc signature: a bundle that is signed at all is the difference between "opens after a prompt" and macOS declaring the app damaged. Signing happens inside `tauri build` (Tauri imports the certificate itself and picks up the notarization key from the environment), and the workflow then verifies the `.app` and the copy inside the produced `.dmg` with `codesign --verify --deep --strict` plus `xcrun stapler validate`. The `entitlements.plist` next to `tauri.conf.json` is not optional: under the hardened runtime the Node-based sidecar gets its JIT pages denied without it and silently never binds its ports.
+</details>
 
 If a coding agent/harness has already cloned this repo and set up the extension, it can equally well `npm run docker:up` (see Quick start above) instead of the desktop app — both expose the identical MCP server on the same ports.
 
