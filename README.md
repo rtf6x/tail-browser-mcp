@@ -12,8 +12,7 @@ Independent project derived from [eyalzh/browser-control-mcp](https://github.com
 
 | Version | Notes |
 |---------|--------|
-| **[v2.0.15](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.15)** (current) | Extension icon set (the add-on had no icons at all), a toolbar button that shows the connection state and opens Options on click, a rewritten one-line description shown in the extensions manager, and the Chrome build renamed to plain "Tail MCP"; icon generation no longer needs Python on the build runner |
-| [v2.0.10](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.10) | Fix: WebSocket server now binds `127.0.0.1` (was `localhost`, which resolved IPv6-only on some machines and silently blocked extension connections) |
+| **[v2.0.23](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.23)** (current) | Extension icon set (the add-on had no icons at all), a toolbar button that shows the connection state and opens Options on click, tab grouping and find-and-highlight, and the WebSocket server binding `127.0.0.1` instead of `localhost` (which resolved IPv6-only on some machines and silently blocked extension connections); one manual run (`gh workflow run release.yml`) builds and publishes every package — Firefox XPI, Chrome zip, AMO source archive, Claude Desktop `.mcpb`, and the signed desktop apps for macOS/Windows/Linux |
 | [v2.0.7](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.7) | Desktop tray app (macOS/Windows/Linux) — bundles the MCP server as a single native binary, no Docker/npm/terminal required |
 | [v2.0.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v2.0.0) | Rebrand to Tail MCP, own extension IDs, screenshot/scroll/viewport-resize tools |
 | [v1.6.1](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.1) | AMO source archive fix, multi-browser `browserId`, WebSocket URLs, ports 18789/18790 |
