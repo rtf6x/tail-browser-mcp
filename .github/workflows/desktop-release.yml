@@ -98,17 +98,30 @@ jobs:
       if: matrix.os == 'macos-latest'
       env:
         APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
       run: |
         set -euo pipefail
+        # GitHub defines an environment variable for every secret referenced in
+        # `env`, empty when the secret is not configured, and Tauri treats an
+        # empty APPLE_CERTIFICATE as a certificate it must import. So export only
+        # what actually exists, and let the build step inherit from here.
         if [ -z "${APPLE_CERTIFICATE:-}" ]; then
           echo "::warning::APPLE_CERTIFICATE is not set - signing ad-hoc. The app opens, but users get an unidentified-developer prompt."
           echo "SIGNED_WITH_DEVELOPER_ID=0" >> "$GITHUB_ENV"
           echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
         else
           echo "SIGNED_WITH_DEVELOPER_ID=1" >> "$GITHUB_ENV"
+          {
+            echo "APPLE_CERTIFICATE<<TAIL_MCP_CERT_EOF"
+            echo "$APPLE_CERTIFICATE"
+            echo "TAIL_MCP_CERT_EOF"
+            echo "APPLE_CERTIFICATE_PASSWORD<<TAIL_MCP_PW_EOF"
+            echo "$APPLE_CERTIFICATE_PASSWORD"
+            echo "TAIL_MCP_PW_EOF"
+          } >> "$GITHUB_ENV"
         fi
         if [ -n "${APPLE_API_KEY_P8:-}" ]; then
           mkdir -p private_keys
@@ -124,12 +137,9 @@ jobs:
 
     - name: Build Tauri app
       working-directory: desktop-app/src-tauri
-      env:
-        # Tauri imports this certificate into a temporary keychain itself and
-        # reads APPLE_SIGNING_IDENTITY and the APPLE_API_* variables from the
-        # environment set up above.
-        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      # Signing variables arrive through GITHUB_ENV from the step above: Tauri
+      # reads APPLE_SIGNING_IDENTITY, APPLE_CERTIFICATE and APPLE_API_* from the
+      # environment, and an empty value is worse than an absent one.
       run: npx --yes @tauri-apps/cli@${TAURI_CLI_VERSION} build
 
     - name: Verify the macOS bundle is signed
