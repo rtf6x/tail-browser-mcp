@@ -360,7 +360,10 @@ jobs:
         gh release upload ${{ needs.prepare.outputs.tag }} "${assets[@]}" --clobber
 
   publish:
-    needs: [extensions, desktop]
+    # prepare is listed because job outputs are only readable from jobs in
+    # `needs`: without it needs.prepare.outputs.tag expands to an empty string
+    # and `gh release edit` is called with no tag at all.
+    needs: [prepare, extensions, desktop]
     runs-on: ubuntu-latest
     steps:
     - name: Publish the release
