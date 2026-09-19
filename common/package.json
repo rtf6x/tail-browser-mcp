@@ -1,6 +1,6 @@
 {
   "name": "@tail-browser-mcp/common",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
