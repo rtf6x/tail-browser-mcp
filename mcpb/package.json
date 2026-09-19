@@ -1,6 +1,6 @@
 {
   "name": "@tail-browser-mcp/mcpb",
-  "version": "2.0.20",
+  "version": "2.0.21",
   "private": true,
   "description": "MCP bundle (MCPB) that bridges Claude Desktop's stdio transport to the Tail MCP HTTP server",
   "scripts": {
