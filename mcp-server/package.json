@@ -1,6 +1,6 @@
 {
   "name": "mcp-server",
-  "version": "2.0.19",
+  "version": "2.0.20",
   "main": "dist/http-server.js",
   "engines": {
     "node": ">=22.0.0"
