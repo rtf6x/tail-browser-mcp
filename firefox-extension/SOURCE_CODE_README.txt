@@ -1,5 +1,7 @@
 Tail MCP — source code for AMO review
-Version: 2.0.0
+Version: 2.0.10
+
+(The `Version:` line above is rewritten from `manifest.json` by `pack-sources.sh` when the source zip is built, so it always matches the packaged manifest.)
 
 Requirements
 - Node.js 18 or newer

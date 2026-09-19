@@ -1,10 +1,12 @@
 # Tail MCP
 
+[![Mozilla Add-on](https://img.shields.io/amo/v/tail-mcp?label=Firefox%20Add-on&logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/)
+
 An MCP server paired with a browser extension (Firefox or Chrome) that lets AI assistants work with your browser locally.
 
 **Why not just use a browser-automation MCP (Playwright, Puppeteer, CDP-driven)?** Those drive a separate, automated browser instance — sites that fingerprint and block bot-controlled browsers (Cloudflare, DataDome, PerimeterX, and most login-walled or anti-scraping pages) detect and block it. Tail MCP is different: it's a real extension running inside **your own, already-logged-in browser**. To the website, the traffic looks exactly like you clicking around — because it is. No `navigator.webdriver` flag, no headless fingerprint, no separate automation profile to re-authenticate. This is the main reason to prefer it over automation-framework MCP servers for anything behind a login or bot-detection wall.
 
-Independent project derived from [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) — **not affiliated** with the [official AMO add-on](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/). Own extension IDs, HTTP transport for [OpenCode](https://opencode.ai), Docker deployment, and additional page-inspection/manipulation tools (screenshot, scroll-to-element, viewport resize).
+Independent project derived from [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) — **not affiliated** with the [official AMO add-on](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/). Published under its own AMO listing: [**Tail MCP**](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/). Own extension IDs, HTTP transport for [OpenCode](https://opencode.ai), Docker deployment, and additional page-inspection/manipulation tools (screenshot, scroll-to-element, viewport resize).
 
 ## Releases
 
@@ -16,7 +18,7 @@ Independent project derived from [eyalzh/browser-control-mcp](https://github.com
 | [v1.6.1](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.1) | AMO source archive fix, multi-browser `browserId`, WebSocket URLs, ports 18789/18790 |
 | [v1.6.0](https://github.com/rtf6x/tail-browser-mcp/releases/tag/v1.6.0) | First v1.6 release (superseded for AMO re-upload) |
 
-**Extensions:** build from this repo — `npm run pack:extensions` (Firefox XPI + AMO source zip + Chrome zip), or load unpacked after `npm run build`.
+**Extensions:** install from [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/) (Firefox), or build from this repo — `npm run pack:extensions` (Firefox XPI + AMO source zip + Chrome zip), or load unpacked after `npm run build`.
 
 **MCP server:** `git checkout main` (or a specific [release tag](#releases)), then `npm run docker:up` — or use the [desktop app](#desktop-app-no-docker-no-terminal) instead.
 
@@ -58,8 +60,8 @@ Port **18789** is the extension WebSocket — **not** MCP. Do not point OpenCode
 
 | Browser | Extension |
 |---------|-----------|
-| **Firefox** | Build from `firefox-extension/` (v1.6+) or temporary add-on |
-| **Chrome / Chromium** | Load unpacked from `chrome-extension/` |
+| **Firefox** | [Install from AMO](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/) (v2.0.10), or build from `firefox-extension/` |
+| **Chrome / Chromium** | Load unpacked from `chrome-extension/` (Chrome Web Store submission pending) |
 
 Default ports: WebSocket **18789**, MCP HTTP **18790** (registered-user range, avoids crowded 808x dev ports). Health probe uses HTTP port. All browser installs on one server use the same pair.
 
@@ -131,7 +133,7 @@ npm run build
 
 ### 2. Install a browser extension
 
-**Firefox** — `about:debugging` → Load Temporary Add-on → `firefox-extension/manifest.json`, or `npm run pack:extensions` (XPI + AMO source zip).
+**Firefox** — install from [addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/); for a dev build instead: `about:debugging` → Load Temporary Add-on → `firefox-extension/manifest.json`, or `npm run pack:extensions` (XPI + AMO source zip).
 
 **Chrome** — `chrome://extensions` → Developer mode → Load unpacked → `chrome-extension/`, or use `tail-mcp-chrome.zip` from `npm run pack:extensions`.
 
@@ -318,11 +320,12 @@ tail-browser-mcp/
 
 ## Roadmap
 
-- **AMO / Chrome Web Store** submission under the new `Tail MCP` identity (currently self-hosted zip/XPI only)
+- **AMO** — live since v2.0.10: [Tail MCP](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/)
+- **Chrome Web Store** submission under the `Tail MCP` identity (not yet published — load unpacked or use the zip for now)
 
 ## Upstream
 
-This project started as a fork of [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) and has since diverged into an independent project with its own extension IDs and identity. The official project and [AMO listing](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/) are maintained separately.
+This project started as a fork of [eyalzh/browser-control-mcp](https://github.com/eyalzh/browser-control-mcp) and has since diverged into an independent project with its own extension IDs and identity. The official project and [its AMO listing](https://addons.mozilla.org/en-US/firefox/addon/browser-control-mcp/) are maintained separately from this one (published as [tail-mcp](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/)).
 
 Repository: [github.com/rtf6x/tail-browser-mcp](https://github.com/rtf6x/tail-browser-mcp)
 

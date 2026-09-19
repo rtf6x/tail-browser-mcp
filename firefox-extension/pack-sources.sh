@@ -25,7 +25,8 @@ rsync -a \
   --exclude .DS_Store \
   "$REPO/common/" "$STAGING/common/"
 
-cp "$FF/SOURCE_CODE_README.txt" "$STAGING/SOURCE_CODE_README.txt"
+VERSION="$(node -p "require('$FF/manifest.json').version")"
+sed "s/^Version: .*/Version: $VERSION/" "$FF/SOURCE_CODE_README.txt" > "$STAGING/SOURCE_CODE_README.txt"
 
 cd "$STAGING"
 rm -f "$OUT"

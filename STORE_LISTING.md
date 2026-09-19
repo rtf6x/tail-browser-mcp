@@ -1,6 +1,16 @@
 # Store listing copy — Tail MCP
 
-Draft copy for AMO (Firefox) and Chrome Web Store submissions. Paste as-is or adjust; character limits noted per field.
+Status: **AMO (Firefox) published** — [tail-mcp](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/), v2.0.10. **Chrome Web Store — still a draft.**
+
+What the AMO listing actually shows (checked 2026-09-19, v2.0.10) differs from the draft copy kept below:
+
+- **Name:** Tail MCP
+- **Summary:** `Local MCP server control for Firefox. Open extension options after install for setup steps.` (this is `manifest.json`'s `description` — not the longer summary proposed below)
+- **Category:** web-development
+- **License:** MIT — **Homepage:** https://github.com/rtf6x/tail-browser-mcp
+- **Permissions:** tabs, tabGroups, history, storage, `<all_urls>`, find
+
+Re-check the live listing before editing it; do not assume the text below is what shipped.
 
 ## Chrome Web Store
 
@@ -47,7 +57,7 @@ Open source, MIT licensed: github.com/rtf6x/tail-browser-mcp
 - `offscreen` — maintain a persistent WebSocket connection from a Manifest V3 service worker
 - `debugger` — used only by the optional, off-by-default viewport-resize tool to emulate device dimensions via Chrome DevTools Protocol; not used by any other tool
 
-## Firefox (AMO)
+## Firefox (AMO) — published as [tail-mcp](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/) (v2.0.10)
 
 **Summary** (250 char max — used ~200):
 ```
