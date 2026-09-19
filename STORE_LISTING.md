@@ -103,6 +103,15 @@ Port 18789 is the extension WebSocket, 18790 is MCP.
 Open source under the MIT license — source, attribution and full setup instructions: https://github.com/rtf6x/tail-browser-mcp
 ```
 
+**Release notes** (paste into the "Release notes" field when uploading the next version — this is what the version history on the listing shows):
+
+```
+- New icon set for the add-on: a fox-tail mark at 16/32/48/128 px, so it no longer shows a generic placeholder in the extensions manager and in search results.
+- New toolbar button, placed in the toolbar on install. Its icon reports the state of the link to your local MCP server: grey when the server is offline, amber while connecting, orange once connected. Hover it for the exact state.
+- Clicking the toolbar button opens the add-on's Options page.
+- Options page setup text is now client-agnostic: one endpoint, the same for every MCP client.
+```
+
 **Tags:** mcp, ai, automation, developer tools, agent — pick from whatever the form offers.
 
 **Data collection / privacy form:** select "None" for all categories — the extension collects no data itself; declare the local audit log and settings as browser-local storage only, not "collection." Link `PRIVACY_POLICY.md` (raw repository URL) as the privacy policy URL:
