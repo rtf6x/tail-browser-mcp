@@ -51,9 +51,10 @@ dist
 # Web extension dist
 web-ext-artifacts/
 
-# Packed extension archives (built by npm run pack:extensions)
+# Packed extension archives (built by npm run pack:extensions) and MCP bundles (pack:mcpb)
 /*.zip
 /*.xpi
+/*.mcpb
 
 # JetBrains IDE local state
 .idea/

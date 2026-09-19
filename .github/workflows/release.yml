@@ -30,11 +30,15 @@ jobs:
     - name: Build and pack browser extensions
       run: npm run pack:extensions
 
+    - name: Pack MCPB bundle (Claude Desktop)
+      run: npm run pack:mcpb
+
     - name: Rename extension packages with version
       run: |
         mv tail-mcp-chrome.zip tail-mcp-chrome-${{ github.event.release.tag_name }}.zip
         mv tail-mcp-dev.xpi tail-mcp-firefox-${{ github.event.release.tag_name }}.xpi
         mv tail-mcp-firefox-source.zip tail-mcp-firefox-source-${{ github.event.release.tag_name }}.zip
+        mv tail-mcp-desktop-*.mcpb tail-mcp-desktop-${{ github.event.release.tag_name }}.mcpb
 
     - name: Upload packages to release
       env:
@@ -44,5 +48,6 @@ jobs:
           ./tail-mcp-chrome-${{ github.event.release.tag_name }}.zip \
           ./tail-mcp-firefox-${{ github.event.release.tag_name }}.xpi \
           ./tail-mcp-firefox-source-${{ github.event.release.tag_name }}.zip \
+          ./tail-mcp-desktop-${{ github.event.release.tag_name }}.mcpb \
           --clobber
 

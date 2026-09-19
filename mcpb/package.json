@@ -1,0 +1,19 @@
+{
+  "name": "@tail-browser-mcp/mcpb",
+  "version": "2.0.10",
+  "private": true,
+  "description": "MCP bundle (MCPB) that bridges Claude Desktop's stdio transport to the Tail MCP HTTP server",
+  "scripts": {
+    "build": "node scripts/build.mjs && tsc --noEmit",
+    "pack": "node scripts/build.mjs && node scripts/pack.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
+    "@types/node": "^22.10.2",
+    "esbuild": "0.25.1",
+    "typescript": "^5.8.2"
+  }
+}

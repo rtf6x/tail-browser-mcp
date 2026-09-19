@@ -34,6 +34,9 @@ jobs:
       - name: Pack extensions (Firefox XPI + AMO source zip + Chrome zip)
         run: npm run pack:extensions
 
+      - name: Pack MCPB bundle (Claude Desktop)
+        run: npm run pack:mcpb
+
       - name: Upload packaged extensions
         uses: actions/upload-artifact@v4
         with:
@@ -42,4 +45,5 @@ jobs:
             tail-mcp-chrome.zip
             tail-mcp-dev.xpi
             tail-mcp-firefox-source.zip
+            tail-mcp-desktop-*.mcpb
           retention-days: 14

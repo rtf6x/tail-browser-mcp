@@ -10,13 +10,13 @@ What the AMO listing actually shows (checked 2026-09-19, v2.0.10) differs from t
 - **License:** MIT — **Homepage:** https://github.com/rtf6x/tail-browser-mcp
 - **Permissions:** tabs, tabGroups, history, storage, `<all_urls>`, find
 
-Re-check the live listing before editing it; do not assume the text below is what shipped.
+Re-check the live listing before editing it; do not assume the text below is what shipped. The draft copy below was rewritten to name harnesses generically (Claude Code, Claude Desktop, OpenCode, omp, any MCP client) — the live AMO listing still carries the older Claude/OpenCode-only wording until it is re-published.
 
 ## Chrome Web Store
 
-**Short description** (132 char max — 118 used):
+**Short description** (132 char max — 128 used):
 ```
-Let your AI assistant (Claude, OpenCode) control this browser locally: tabs, history, page reading, screenshots, DOM tools.
+Let your AI assistant (Claude, OpenCode, any MCP client) control this browser locally: tabs, history, page reading, screenshots.
 ```
 
 **Detailed description:**
@@ -42,7 +42,7 @@ SETUP
 1. Install this extension.
 2. Run the Tail MCP server on your machine (see github.com/rtf6x/tail-browser-mcp for instructions; Docker one-liner included).
 3. Open the extension's Options page, set a Browser ID and the server's WebSocket URL.
-4. Point your MCP client (Claude Desktop, OpenCode, etc.) at the server.
+4. Point your MCP client (Claude Code, Claude Desktop, OpenCode, omp — any Streamable-HTTP MCP client) at the server.
 
 Open source, MIT licensed: github.com/rtf6x/tail-browser-mcp
 ```
@@ -61,7 +61,7 @@ Open source, MIT licensed: github.com/rtf6x/tail-browser-mcp
 
 **Summary** (250 char max — used ~200):
 ```
-Tail MCP lets an AI assistant (Claude, OpenCode) control this browser through a local MCP server you run yourself: tabs, history, and — with your per-domain consent — reading, scripting, and screenshotting pages.
+Tail MCP lets an AI assistant (Claude, Claude Code, OpenCode, omp, or any MCP client) control this browser through a local MCP server you run yourself: tabs, history, and — with your per-domain consent — reading, scripting, and screenshotting pages.
 ```
 
 **Description:** reuse the Chrome Web Store "Detailed description" above verbatim (AMO has no separate short/long split requirement beyond the summary field).

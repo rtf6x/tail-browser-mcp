@@ -1,0 +1,48 @@
+{
+  "manifest_version": "0.3",
+  "name": "tail-mcp",
+  "display_name": "Tail MCP",
+  "version": "0.0.0",
+  "description": "Drive your own logged-in browser tabs from Claude Desktop through a local Tail MCP server",
+  "long_description": "Connects Claude Desktop to a Tail MCP server running on your machine. The server (Docker container or the Tail MCP tray app) talks to a Firefox or Chrome extension inside your own, already-logged-in browser, so pages you automate look like normal browsing — no separate automation browser, no `navigator.webdriver` flag.\n\n**Requirements**\n\n1. A Tail MCP server listening on `http://127.0.0.1:18790` — start the tray app, or run `npm run docker:up` in the [repository](https://github.com/rtf6x/tail-browser-mcp).\n2. The Tail MCP browser extension, connected to that server.\n\nThis bundle is a stdio-to-HTTP bridge: Claude Desktop starts it locally, and every MCP request is forwarded to your server, so the browser registry and command queue stay in the single long-running server process. Tools become available immediately; `list-connected-browsers` lists the browser IDs.",
+  "author": {
+    "name": "rtf6x",
+    "url": "https://github.com/rtf6x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rtf6x/tail-browser-mcp.git"
+  },
+  "homepage": "https://github.com/rtf6x/tail-browser-mcp",
+  "support": "https://github.com/rtf6x/tail-browser-mcp/issues",
+  "license": "MIT",
+  "keywords": ["mcp", "browser", "automation", "firefox", "chrome", "tabs", "scraping"],
+  "privacy_policies": ["https://github.com/rtf6x/tail-browser-mcp/blob/main/PRIVACY_POLICY.md"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.mjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.mjs"],
+      "env": {
+        "TAIL_MCP_URL": "${user_config.server_url}"
+      }
+    }
+  },
+  "tools_generated": true,
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "user_config": {
+    "server_url": {
+      "type": "string",
+      "title": "Tail MCP server URL",
+      "description": "Where your Tail MCP server listens. Change this only if you moved the server or Docker publishes a different port.",
+      "default": "http://127.0.0.1:18790/mcp",
+      "required": false
+    }
+  }
+}
