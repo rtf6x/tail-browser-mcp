@@ -1,53 +1,79 @@
 #!/usr/bin/env python3
-"""Generate toolbar icons for the Chrome extension."""
+"""Generate toolbar icons for the Chrome extension.
+
+Draws the Tail MCP fox tail (tail-shape.svg) as a solid silhouette, one set per
+connection state: body in the state colour, tip in a lighter tint of it.
+Needs `rsvg-convert` (brew install librsvg) and Pillow.
+"""
 import os
-import struct
-import zlib
+import subprocess
+import tempfile
 
-ROOT = os.path.join(os.path.dirname(__file__), "assets", "icons")
+from PIL import Image, ImageDraw, ImageFilter
 
+HERE = os.path.dirname(__file__)
+ROOT = os.path.join(HERE, "assets", "icons")
+SHAPE = os.path.join(HERE, "tail-shape.svg")
+
+# (body, tip)
 COLORS = {
-    "connected": (66, 133, 244),
-    "connecting": (251, 188, 4),
-    "disconnected": (158, 158, 158),
+    "connected": ((255, 94, 0), (255, 196, 150)),
+    "connecting": ((251, 188, 4), (255, 234, 158)),
+    "disconnected": ((138, 138, 138), (206, 206, 206)),
 }
 
+BIG = 1024
+TIP_Y = 270 / 512  # fraction of the shape where the lighter tip starts
+SIZES = (16, 32, 48, 128)
 
-def png_chunk(tag: bytes, data: bytes) -> bytes:
-    crc = zlib.crc32(tag + data) & 0xFFFFFFFF
-    return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+
+def silhouette() -> Image.Image:
+    """Filled tail mask: the SVG is an outline, so flood-fill the outside and invert."""
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        path = tmp.name
+    subprocess.run(["rsvg-convert", "-w", str(BIG), "-h", str(BIG), SHAPE, "-o", path], check=True)
+    img = Image.open(path).convert("RGB")
+    os.unlink(path)
+    marker = (255, 0, 255)
+    ImageDraw.floodfill(img, (0, 0), marker, thresh=40)
+    mask = Image.new("L", img.size, 0)
+    px, mp = img.load(), mask.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            if px[x, y] != marker:
+                mp[x, y] = 255
+    # trim the light anti-aliased fringe the flood fill leaves at the edge
+    return mask.filter(ImageFilter.MinFilter(5))
 
 
-def write_circle_png(path: str, size: int, rgb: tuple[int, int, int]) -> None:
-    r, g, b = rgb
-    cx = cy = size / 2
-    radius = size / 2 - 1
-    rows = []
-    for y in range(size):
-        row = bytearray([0])
-        for x in range(size):
-            dist = ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2) ** 0.5
-            if dist <= radius:
-                row.extend([r, g, b, 255])
-            else:
-                row.extend([0, 0, 0, 0])
-        rows.append(bytes(row))
+def render(mask: Image.Image, size: int, body, tip) -> Image.Image:
+    bbox = mask.getbbox()
+    crop = mask.crop(bbox)
+    tip_start = int(BIG * TIP_Y) - bbox[1]
 
-    ihdr = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)
-    png = b"\x89PNG\r\n\x1a\n"
-    png += png_chunk(b"IHDR", ihdr)
-    png += png_chunk(b"IDAT", zlib.compress(b"".join(rows), 9))
-    png += png_chunk(b"IEND", b"")
+    layer = Image.new("RGBA", crop.size, body + (0,))
+    body_img = Image.new("RGBA", crop.size, body + (255,))
+    tip_img = Image.new("RGBA", crop.size, tip + (255,))
+    fill = body_img.copy()
+    fill.paste(tip_img.crop((0, tip_start, crop.width, crop.height)), (0, tip_start))
+    layer = Image.composite(fill, layer, crop)
 
-    with open(path, "wb") as handle:
-        handle.write(png)
+    pad = max(1, round(size * 0.06))
+    inner = size - 2 * pad
+    scale = min(inner / layer.width, inner / layer.height)
+    w, h = max(1, round(layer.width * scale)), max(1, round(layer.height * scale))
+    small = layer.resize((w, h), Image.LANCZOS)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.paste(small, ((size - w) // 2, (size - h) // 2))  # no mask: keep RGBA as-is
+    return out
 
 
 def main() -> None:
     os.makedirs(ROOT, exist_ok=True)
-    for name, rgb in COLORS.items():
-        for size in (16, 32, 48, 128):
-            write_circle_png(os.path.join(ROOT, f"{name}-{size}.png"), size, rgb)
+    mask = silhouette()
+    for name, (body, tip) in COLORS.items():
+        for size in SIZES:
+            render(mask, size, body, tip).save(os.path.join(ROOT, f"{name}-{size}.png"))
     print(f"Wrote icons to {ROOT}")
 
 
