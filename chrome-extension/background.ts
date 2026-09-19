@@ -186,7 +186,7 @@ async function bootstrap(config: Awaited<ReturnType<typeof getConfig>>): Promise
   await sendOffscreenInit(config);
   initializedConfigKey = key;
   await setupReconnectAlarm();
-  console.log("Tail MCP (Chrome) initialized via offscreen document");
+  console.log("Tail MCP initialized via offscreen document");
 }
 
 async function startExtension(): Promise<void> {

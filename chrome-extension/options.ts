@@ -1,5 +1,5 @@
 /**
- * Options page script for Tail MCP (Chrome)
+ * Options page script for the Tail MCP Chrome extension
  */
 import { browser } from "./browser";
 import {

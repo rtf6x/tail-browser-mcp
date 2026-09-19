@@ -1,5 +1,5 @@
 /**
- * Configuration management for Tail MCP (Chrome)
+ * Configuration management for the Tail MCP Chrome extension
  */
 
 import { ServerMessageRequest } from "@tail-browser-mcp/common/server-messages";
