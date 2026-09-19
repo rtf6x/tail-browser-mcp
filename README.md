@@ -368,19 +368,18 @@ For people who just want to run the server without touching Docker, npm, or a te
 <details>
 <summary>Maintainers: the macOS signing secrets</summary>
 
-The bundle build (`desktop-release.yml`) reads these repository secrets. Each one is optional; the workflow degrades instead of failing, except that a certificate without a notarization key fails on purpose — signed but not notarized still trips Gatekeeper, so that half-configured pair stops the run instead of shipping:
+The bundle build (`desktop-release.yml`) reads these repository secrets. Nothing is required: with no certificate the build signs ad-hoc and says so. Two combinations are meaningful, and a certificate without notarization credentials fails on purpose — signed but not notarized still trips Gatekeeper, so that half-configured pair stops the run instead of shipping.
 
-| Secret | What it is |
+**1. The certificate** — `APPLE_CERTIFICATE` is the base64 of the exported *Developer ID Application* `.p12` (`openssl base64 -A -in cert.p12 -out cert-base64.txt`), `APPLE_CERTIFICATE_PASSWORD` the password you set when exporting it. Export it so that the system Security framework can import it — either `security export -t identities -f pkcs12` from the keychain that holds the certificate, or `/usr/bin/openssl pkcs12 -export` (the Apple-provided LibreSSL, whose legacy cipher is what `security import` expects). The workflow reads the signing identity out of that `.p12` and passes it as `APPLE_SIGNING_IDENTITY`, so the secret list stays at five entries.
+
+**2. Notarization** — pick one trio; Tauri accepts both:
+
+| Secrets | What they are |
 |---|---|
-| `APPLE_CERTIFICATE` | base64 of the exported *Developer ID Application* `.p12` — `openssl base64 -A -in cert.p12 -out cert-base64.txt` |
-| `APPLE_CERTIFICATE_PASSWORD` | the password you set when exporting that `.p12` |
-| `APPLE_API_KEY` | App Store Connect API key ID |
-| `APPLE_API_ISSUER` | App Store Connect API issuer ID |
-| `APPLE_API_KEY_P8` | contents of the downloaded `AuthKey_*.p8` |
+| `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` | your Apple ID, an *app-specific password* created at appleid.apple.com, and the team ID |
+| `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` | an App Store Connect API key: its key ID, its issuer ID, and the contents of the downloaded `AuthKey_*.p8` |
 
-Export the `.p12` so that the system Security framework can import it — either `security export -t identities -f pkcs12` from the keychain that holds the certificate, or `/usr/bin/openssl pkcs12 -export` (the Apple-provided LibreSSL, whose legacy cipher it writes is what `security import` expects). The workflow reads the signing identity out of that `.p12` and passes it as `APPLE_SIGNING_IDENTITY`, so the secret list stays at five entries.
-
-With no certificate the workflow sets `APPLE_SIGNING_IDENTITY=-`, an ad-hoc signature: a bundle that is signed at all is the difference between "opens after a prompt" and macOS declaring the app damaged. Signing happens inside `tauri build` (Tauri imports the certificate itself and picks up the notarization key from the environment), and the workflow then verifies the `.app` and the copy inside the produced `.dmg` with `codesign --verify --deep --strict`, asserts that the sidecar carries its JIT entitlement, and — once a notarization key is configured — requires `xcrun stapler validate` to pass and the bundle and sidecar to share a team. The `entitlements.plist` next to `tauri.conf.json` is not optional: under the hardened runtime the Node-based sidecar gets its JIT pages denied without it and silently never binds its ports.
+With no certificate the workflow sets `APPLE_SIGNING_IDENTITY=-`, an ad-hoc signature: a bundle that is signed at all is the difference between "opens after a prompt" and macOS declaring the app damaged. Signing happens inside `tauri build` (Tauri imports the certificate itself and picks up the notarization credentials from the environment), and the workflow then verifies the `.app` and the copy inside the produced `.dmg` with `codesign --verify --deep --strict`, asserts that the sidecar carries its JIT entitlement, and — once notarization is configured — requires `xcrun stapler validate` to pass and the bundle and sidecar to share a team. The `entitlements.plist` next to `tauri.conf.json` is not optional: under the hardened runtime the Node-based sidecar gets its JIT pages denied without it and silently never binds its ports.
 </details>
 
 If a coding agent/harness has already cloned this repo and set up the extension, it can equally well `npm run docker:up` (see Quick start above) instead of the desktop app — both expose the identical MCP server on the same ports.

@@ -102,6 +102,9 @@ jobs:
         APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       run: |
         set -euo pipefail
         # GitHub defines an environment variable for every secret referenced in
@@ -145,16 +148,36 @@ jobs:
             echo "APPLE_API_KEY=${APPLE_API_KEY}"
             echo "APPLE_API_ISSUER=${APPLE_API_ISSUER}"
             echo "APPLE_API_KEY_PATH=${GITHUB_WORKSPACE}/private_keys/AuthKey_${APPLE_API_KEY}.p8"
-            echo "NOTARIZED=1"
           } >> "$GITHUB_ENV"
-          echo "notarizing with API key ${APPLE_API_KEY}"
-        else
-          echo "NOTARIZED=0" >> "$GITHUB_ENV"
-          if [ "$SIGNED" = "1" ]; then
-            echo "APPLE_CERTIFICATE is set but APPLE_API_KEY_P8 is not: a Developer ID build that is signed but not notarized still trips Gatekeeper, so this half-configured pair fails here instead of shipping." >&2
+          NOTARIZED=1
+          echo "notarizing with App Store Connect key ${APPLE_API_KEY}"
+        elif [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ]; then
+          # The other trio Tauri accepts: an Apple ID with an app-specific
+          # password. It cannot work without the team ID, because nothing else
+          # tells notarytool which team the Apple ID should act for.
+          if [ -z "${APPLE_TEAM_ID:-}" ]; then
+            echo "APPLE_ID and APPLE_PASSWORD are set but APPLE_TEAM_ID is not - Tauri aborts notarization without it." >&2
             exit 1
           fi
-          echo "::warning::APPLE_API_KEY_P8 is not set - Tauri will skip notarization."
+          {
+            echo "APPLE_ID=${APPLE_ID}"
+            echo "APPLE_PASSWORD<<TAIL_MCP_APPLE_PW_EOF"
+            echo "$APPLE_PASSWORD"
+            echo "TAIL_MCP_APPLE_PW_EOF"
+            echo "APPLE_TEAM_ID=${APPLE_TEAM_ID}"
+          } >> "$GITHUB_ENV"
+          NOTARIZED=1
+          echo "notarizing as ${APPLE_ID} with an app-specific password"
+        else
+          NOTARIZED=0
+        fi
+        echo "NOTARIZED=$NOTARIZED" >> "$GITHUB_ENV"
+        if [ "$NOTARIZED" = "0" ]; then
+          if [ "$SIGNED" = "1" ]; then
+            echo "APPLE_CERTIFICATE is set but no notarization credentials are: signed-but-not-notarized still trips Gatekeeper, so this half-configured pair fails here instead of shipping. Set APPLE_API_KEY + APPLE_API_ISSUER + APPLE_API_KEY_P8, or APPLE_ID + APPLE_PASSWORD + APPLE_TEAM_ID." >&2
+            exit 1
+          fi
+          echo "::warning::no notarization credentials - Tauri will skip notarization."
         fi
 
     - name: Build Tauri app
