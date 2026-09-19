@@ -363,7 +363,7 @@ For people who just want to run the server without touching Docker, npm, or a te
 
 **Works with any MCP-capable harness** — OpenCode, Claude Code, Claude Desktop, omp, Cursor, or anything else that can add a remote/Streamable-HTTP MCP server (Claude Desktop via the stdio bridge in [step 4](#4-point-your-harness-at-the-server)). The desktop app doesn't care who connects; point any harness at `http://127.0.0.1:18790/mcp` — see [step 4](#4-point-your-harness-at-the-server) for ready-made per-harness snippets, or use the [self-configuring prompt](#any-coding-agent--harness-self-configuring-prompt) so the harness wires itself up. One running desktop app can serve multiple harnesses on the same machine simultaneously — they all share the same browser connections.
 
-**Signing status.** macOS builds are signed with a Developer ID and notarized by Apple, so they open with a plain double-click and no warning. If a release was built while the signing secrets were unset, the bundle is signed ad-hoc instead and macOS shows an "unidentified developer" prompt — then right-click the app → **Open** → **Open** again in the dialog (needed once). Windows builds are still unsigned: click **More info** on the SmartScreen prompt → **Run anyway**.
+**Signing status.** Once the maintainer secrets below are configured, macOS builds are signed with a Developer ID and notarized by Apple, so they open with a plain double-click and no warning. A release built while those secrets are unset is signed ad-hoc instead, and macOS shows an "unidentified developer" prompt — then right-click the app → **Open** → **Open** again in the dialog (needed once). Windows builds are still unsigned: click **More info** on the SmartScreen prompt → **Run anyway**.
 
 <details>
 <summary>Maintainers: the macOS signing secrets</summary>
@@ -380,6 +380,30 @@ The bundle build (`desktop-release.yml`) reads these repository secrets. Nothing
 | `APPLE_API_KEY`, `APPLE_API_ISSUER`, `APPLE_API_KEY_P8` | an App Store Connect API key: its key ID, its issuer ID, and the contents of the downloaded `AuthKey_*.p8` |
 
 With no certificate the workflow sets `APPLE_SIGNING_IDENTITY=-`, an ad-hoc signature: a bundle that is signed at all is the difference between "opens after a prompt" and macOS declaring the app damaged. Signing happens inside `tauri build` (Tauri imports the certificate itself and picks up the notarization credentials from the environment), and the workflow then verifies the `.app` and the copy inside the produced `.dmg` with `codesign --verify --deep --strict`, asserts that the sidecar carries its JIT entitlement, and — once notarization is configured — requires `xcrun stapler validate` to pass and the bundle and sidecar to share a team. The `entitlements.plist` next to `tauri.conf.json` is not optional: under the hardened runtime the Node-based sidecar gets its JIT pages denied without it and silently never binds its ports.
+
+**Setting it up, once.** The signing half needs only the certificate that already exists; notarization needs an app-specific password, which is the part only the account holder can create.
+
+1. **App-specific password** for the Apple ID that belongs to the team: appleid.apple.com → *Sign-In and Security* → *App-Specific Passwords* → `+`, label it `tail-mcp`, and copy the `xxxx-xxxx-xxxx-xxxx` value (shown once). The regular account password does not work with `notarytool`.
+2. **Export the certificate** so the macOS Security framework can import it — `/usr/bin/openssl` (LibreSSL) and not OpenSSL 3, whose PKCS#12 the framework may refuse:
+
+   ```bash
+   cd ~/tail-mcp-signing   # wherever the .cer and its private key live
+   /usr/bin/openssl x509 -in developerID_application.cer -inform DER -out cert.pem
+   /usr/bin/openssl pkcs12 -export -inkey developerID.key -in cert.pem \
+     -certfile DeveloperIDG2CA.pem -descert \
+     -name "Developer ID Application: … (TEAMID)" -out cert.p12 -passout pass:'<password>'
+   /usr/bin/openssl base64 -A -in cert.p12 -out cert-base64.txt
+   ```
+3. **Set the secrets.** The certificate goes in from the file; the rest prompt for a value, so it never enters the shell history. The team ID is the `OU` in `openssl x509 -noout -subject -in cert.pem`, and `APPLE_CERTIFICATE_PASSWORD` is the one chosen in step 2:
+
+   ```bash
+   gh secret set APPLE_CERTIFICATE < cert-base64.txt
+   gh secret set APPLE_CERTIFICATE_PASSWORD
+   gh secret set APPLE_ID          # the Apple ID from step 1
+   gh secret set APPLE_PASSWORD    # the app-specific password
+   gh secret set APPLE_TEAM_ID
+   ```
+4. **Build**: `gh workflow run desktop-release.yml -f tag=v2.0.19`. Notarization happens inside `tauri build`; the verify step then requires `xcrun stapler validate` to pass for the `.app` and for the copy inside the `.dmg`, which is the observable proof that Apple issued a ticket. A notarization round trip adds a few minutes to the run.
 </details>
 
 If a coding agent/harness has already cloned this repo and set up the extension, it can equally well `npm run docker:up` (see Quick start above) instead of the desktop app — both expose the identical MCP server on the same ports.

@@ -15,14 +15,14 @@ name: Build and upload desktop app
 # Repository secrets, all optional, each one degrades gracefully:
 #   APPLE_CERTIFICATE           base64 of the exported Developer ID .p12
 #   APPLE_CERTIFICATE_PASSWORD  password chosen when exporting that .p12
-#   APPLE_API_KEY               App Store Connect API key ID
-#   APPLE_API_ISSUER            App Store Connect API issuer ID
-#   APPLE_API_KEY_P8            contents of the downloaded AuthKey_*.p8
-# No certificate  -> ad-hoc signature (app opens, user sees an "unidentified
-#                    developer" prompt)
-# No API key      -> no notarization (with a certificate: the verify step
-#                    fails, because an un-notarized Developer ID build still
-#                    greets users with a warning)
+# Notarization takes either trio; Tauri reads the Apple ID one first:
+#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID             Apple ID + app-specific password
+#   APPLE_API_KEY, APPLE_API_ISSUER, APPLE_API_KEY_P8   App Store Connect API key
+# No certificate        -> ad-hoc signature (app opens, user sees an
+#                          "unidentified developer" prompt)
+# No notarization creds -> with a certificate the verify step fails on purpose,
+#                          because a signed-but-not-notarized build still greets
+#                          users with a warning
 on:
   workflow_dispatch:
     inputs:
