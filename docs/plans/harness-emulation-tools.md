@@ -1,4 +1,6 @@
-# Plan request: harness emulation and inspection tools
+# Plan: harness emulation and inspection tools
+
+Feature request — six tools — and the plan that puts them in.
 
 Status: proposed. Nothing here is implemented yet.
 

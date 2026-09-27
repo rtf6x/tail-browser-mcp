@@ -546,7 +546,7 @@ tail-browser-mcp/
 
 - **AMO** — live since v2.0.10: [Tail MCP](https://addons.mozilla.org/en-US/firefox/addon/tail-mcp/)
 - **Chrome Web Store** submission under the `Tail MCP` identity (not yet published — load unpacked or use the zip for now)
-- **Harness emulation and inspection tools** — [plan request](docs/plans/harness-emulation-tools.md): emulated media features (`prefers-reduced-motion` and friends), scripts off, cache/network conditions, a request log, time and locale overrides, CPU throttling
+- **Harness emulation and inspection tools** — [plan](docs/plans/harness-emulation-tools.md): emulated media features (`prefers-reduced-motion` and friends), scripts off, cache/network conditions, a request log, time and locale overrides, CPU throttling
 
 ## Upstream
 
