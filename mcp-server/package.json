@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/http-server.js",
     "build:sidecar": "node scripts/build-sidecar.mjs",
-    "test": "npm run build && node --test test/"
+    "test": "npm run build && node --test \"test/*.test.mjs\""
   },
   "license": "MIT",
   "description": "Tail MCP Server",
