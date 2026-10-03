@@ -39,7 +39,7 @@ execFileSync(
     "--bundle",
     "--platform=node",
     "--format=cjs",
-    "--target=node22",
+    "--target=node24",
     `--outfile=${bundlePath}`,
   ],
   { cwd: mcpServerDir, stdio: "inherit", shell: process.platform === "win32" }

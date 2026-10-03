@@ -67,7 +67,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22
+        node-version: 24
 
     - name: Bump the version, tag the tip of main and open a draft release
       id: tag
@@ -114,7 +114,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22
+        node-version: 24
         cache: 'npm'
 
     - name: Install dependencies
@@ -171,7 +171,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22
+        node-version: 24
         cache: 'npm'
 
     - name: Install Linux Tauri build dependencies
