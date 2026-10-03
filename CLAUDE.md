@@ -120,3 +120,7 @@ Optional: set `EXTENSION_SECRET` in the MCP server env to enable HMAC signing on
 - Nx monorepo orchestration
 - Docker: builds `common/` then `mcp-server/` (see `Dockerfile`)
 - Page tools require per-domain user consent in the extension
+
+## The instructions and the skill
+
+`createBrowserControlServer` sends `INSTRUCTIONS` (mcp-server/mcp-tools.ts) as `InitializeResult.instructions`: a short mandate, because a host keeps it in the model's context in every session. Keep it generic (it ships to every user) and short (`mcp-server/test/instructions.test.mjs` caps it). Some hosts ignore the field, so `skills/browser-testing-with-devtools/` carries the same mandate in its description; it is a copy of `ai-skillset/skills/browser-testing-with-devtools`, not maintained here - run `scripts/sync-skill.sh` after the skill changes there. A tool's name changes in `mcp-tools.ts` and in the skill's tool table together.

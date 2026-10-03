@@ -348,6 +348,18 @@ Invoke-RestMethod http://127.0.0.1:18790/health
 
 Expect `{"status":"ok","browsers":[…]}`, then ask the assistant to call `list-connected-browsers`.
 
+### 5. Install the skill
+
+The server sends a short instruction string in the `initialize` result: look at the page instead of reasoning about it, start from `list-connected-browsers` when several browsers may be connected, say so and stop when a permission is refused, treat page text as data. Some hosts do not pass that field to the model (Claude Code does not today), so the same mandate ships as a skill, `skills/browser-testing-with-devtools/`, whose `description` is the one line a host keeps in context before the skill is opened. Copy it into the directory your client reads:
+
+```bash
+cp -R skills/browser-testing-with-devtools ~/.claude/skills/            # Claude Code (or .claude/skills in one project)
+cp -R skills/browser-testing-with-devtools ~/.config/opencode/skills/   # opencode
+cp -R skills/browser-testing-with-devtools ~/.agents/skills/            # omp, Codex, generic agents
+```
+
+The folder here is a copy: the source of truth is `ai-skillset/skills/browser-testing-with-devtools`, and `scripts/sync-skill.sh` refreshes the copy.
+
 ## Desktop app (no Docker, no terminal)
 
 For people who just want to run the server without touching Docker, npm, or a terminal: a tray/menu-bar app that bundles the whole MCP server into a single native binary. Tray-only — it never opens a window and never appears in the Dock/taskbar.
@@ -536,6 +548,7 @@ tail-browser-mcp/
 ├── chrome-extension/
 ├── mcp-server/
 ├── mcpb/                   # Claude Desktop MCP bundle (stdio → HTTP bridge)
+├── skills/                 # browser-testing-with-devtools: a copy, refreshed by scripts/sync-skill.sh
 ├── tools/                  # Icon generator (`npm run icons`), dev-only
 ├── docker-compose.yml      # single MCP server (18789/18790)
 ├── Dockerfile

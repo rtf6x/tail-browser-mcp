@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/http-server.js",
-    "build:sidecar": "node scripts/build-sidecar.mjs"
+    "build:sidecar": "node scripts/build-sidecar.mjs",
+    "test": "npm run build && node --test test/"
   },
   "license": "MIT",
   "description": "Tail MCP Server",

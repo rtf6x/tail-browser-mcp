@@ -31,6 +31,9 @@ jobs:
       - name: Typecheck mcp-server
         run: cd mcp-server && npx tsc --noEmit
 
+      - name: MCP server tests (the instructions reach the client)
+        run: cd mcp-server && npm test
+
       - name: Pack extensions (Firefox XPI + AMO source zip + Chrome zip)
         run: npm run pack:extensions
 
