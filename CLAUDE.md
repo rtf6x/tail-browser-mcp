@@ -85,6 +85,7 @@ Any MCP client     ──MCP (Streamable HTTP :18790)──►  mcp-server
 - **One MCP server, many browsers.** Each extension registers with a unique `browserId` on connect.
 - MCP tools take optional `browserId` (required when >1 browser connected). Use `list-connected-browsers` first.
 - Per-browser request queue on the server (sequential commands per browser).
+- **The MCP endpoint is stateless.** No `Mcp-Session-Id`, no session map: a `McpServer` and its transport live for one POST and are released on `res.on('close')`; GET and DELETE answer 405. Shared state belongs in `BrowserAPI`, never in the per-request server. Keeping sessions leaked ~0.9 MB per client that never sent `DELETE` (1.5 GB after 3 days); `mcp-server/test/stateless.test.mjs` pins it.
 
 ### Key files
 
