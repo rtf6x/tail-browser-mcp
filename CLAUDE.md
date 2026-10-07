@@ -46,6 +46,11 @@ cd mcp-server && node scripts/build-sidecar.mjs <rust-target-triple> ../desktop-
 cd desktop-app/src-tauri && npx @tauri-apps/cli build   # or `dev` while iterating
 ```
 
+Local build prerequisites: a Node 24 from nodejs.org (Homebrew's `node` is built without SEA; the
+script thins the universal macOS binary itself) and a rustup `cargo` first in `PATH` (`Cargo.lock`
+is lockfile v4; Homebrew's cargo 1.74 cannot read it). `tauri build` rewrites `Cargo.lock` under a
+newer cargo - `git checkout` it, it is not part of the change.
+
 Releases are manual only: `gh workflow run release.yml` bumps the patch version, commits
 and tags the tip of `main`, builds the extension packages and the signed desktop bundles
 for macOS/Windows/Linux in parallel, and publishes the release (it stays a draft until

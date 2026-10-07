@@ -71,7 +71,17 @@ const exeName = `mcp-server-${targetTriple}${isWindows ? ".exe" : ""}`;
 const outExePath = join(outDir, exeName);
 
 console.log(`[sidecar] copying node executable to ${outExePath}...`);
-copyFileSync(process.execPath, outExePath);
+// The nodejs.org macOS installer ships a universal (fat) binary. The SEA fuse sentinel then occurs
+// once per architecture and postject refuses to inject, so cut out the slice for the target.
+const macArch = targetTriple.startsWith("aarch64") ? "arm64" : "x86_64";
+const isFatMacho =
+  process.platform === "darwin" &&
+  execFileSync("lipo", ["-archs", process.execPath], { encoding: "utf8" }).trim().split(/\s+/).length > 1;
+if (isFatMacho) {
+  execFileSync("lipo", [process.execPath, "-thin", macArch, "-output", outExePath], { stdio: "inherit" });
+} else {
+  copyFileSync(process.execPath, outExePath);
+}
 
 if (process.platform === "darwin") {
   execFileSync("codesign", ["--remove-signature", outExePath], { stdio: "inherit" });
