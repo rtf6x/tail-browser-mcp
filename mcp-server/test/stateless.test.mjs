@@ -75,9 +75,11 @@ test("abandoned clients do not accumulate memory", async () => {
     capabilities: {},
     clientInfo: { name: "t", version: "0" },
   };
-  for (let i = 0; i < 50; i++) await (await rpc("initialize", init)).text();
+  // V8 grows the heap for the first ~1000 requests before it collects, so RSS is read after that
+  // warm-up: a steady server stays flat, a per-session leak (~0.9 MB each before 2fde785) does not.
+  for (let i = 0; i < 1000; i++) await (await rpc("initialize", init)).text();
   const before = rssMb();
-  for (let i = 0; i < 500; i++) await (await rpc("initialize", init)).text();
+  for (let i = 0; i < 1000; i++) await (await rpc("initialize", init)).text();
   const growth = rssMb() - before;
-  assert.ok(growth < 150, `RSS grew ${growth.toFixed(0)} MB over 500 sessions`);
+  assert.ok(growth < 50, `RSS grew ${growth.toFixed(0)} MB over 1000 sessions after warm-up`);
 });
